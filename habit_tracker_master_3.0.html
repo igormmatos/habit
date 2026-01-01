@@ -1,664 +1,621 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Habit Tracker Master 3.2 - FINAL</title>
-<style>
-    * { box-sizing: border-box; }
-    body {
-        font-family: 'Courier New', monospace;
-        background: #fff;
-        color: #000;
-        padding: 40px;
-        margin: 0;
-    }
-    .container {
-        max-width: 900px;
-        margin: auto;
-    }
-    h1 {
-        text-align: center;
-        font-size: 24px;
-        letter-spacing: 2px;
-        margin-bottom: 40px;
-        border-bottom: 2px solid #000;
-        padding-bottom: 15px;
-    }
-    .section-title {
-        font-size: 14px;
-        font-weight: bold;
-        margin: 30px 0 10px 0;
-        border-left: 4px solid #000;
-        padding-left: 10px;
-    }
-    .habit-group {
-        border: 1px solid #000;
-        padding: 15px;
-        margin-bottom: 15px;
-    }
-    .habit-item {
-        display: flex;
-        align-items: center;
-        padding: 8px 0;
-        border-bottom: 1px solid #e0e0e0;
-    }
-    .habit-item:last-child { border-bottom: none; }
-    .habit-item.optional {
-        background: #f5f5f5;
-        border: 2px dashed #000;
-        padding: 6px;
-        margin-bottom: 4px;
-    }
-    .drag-handle {
-        cursor: grab;
-        margin-right: 8px;
-        user-select: none;
-        font-size: 14px;
-    }
-    .habit-number {
-        width: 25px;
-        font-weight: bold;
-        margin-right: 8px;
-    }
-    .priority-checkbox {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 18px;
-        height: 18px;
-        border: 2px solid #000;
-        border-radius: 3px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 14px;
-        margin-right: 8px;
-        background: #fff;
-    }
-    .priority-checkbox:checked::before {
-        content: "!";
-        font-size: 14px;
-        font-weight: bold;
-        line-height: 1;
-    }
-    .habit-label {
-        flex: 1;
-        font-size: 13px;
-        cursor: pointer;
-        padding: 1px 2px;
-    }
-    .habit-label:hover {
-        background: #f0f0f0;
-        border-radius: 2px;
-    }
-    .edit-input {
-        width: 90%;
-        border: none;
-        border-bottom: 2px solid #000;
-        background: transparent;
-        padding: 4px 0;
-        font-family: 'Courier New', monospace;
-        font-size: 13px;
-    }
-    .form-field { margin-bottom: 15px; }
-    .form-field label {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 5px;
-    }
-    .form-field input,
-    .form-field textarea {
-        width: 100%;
-        border: none;
-        border-bottom: 2px solid #000;
-        background: transparent;
-        padding: 6px 0;
-        font-family: 'Courier New', monospace;
-    }
-    .form-field textarea {
-        resize: vertical;
-        min-height: 60px;
-    }
-    .btn-primary {
-        width: 100%;
-        background: #000;
-        color: #fff;
-        border: none;
-        padding: 18px;
-        cursor: pointer;
-        font-size: 16px;
-        margin-top: 40px;
-        letter-spacing: 1px;
-    }
-    .btn-primary:hover { background: #333; }
-
-    .import-section {
-        margin-top: 20px;
-        padding: 15px;
-        border: 2px dashed #333;
-        background: #f9f9f9;
-        text-align: center;
-    }
-
-    .import-section label {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 10px;
-        font-size: 12px;
-        letter-spacing: 1px;
-    }
-
-    .btn-import {
-        padding: 12px 24px;
-        border: 2px solid #1565c0;
-        background: #1565c0;
-        color: #fff;
-        cursor: pointer;
-        font-size: 13px;
-        letter-spacing: 1px;
-        font-weight: bold;
-        font-family: 'Courier New', monospace;
-        transition: all 0.2s ease;
-    }
-
-    .btn-import:hover {
-        background: #0d47a1;
-        border-color: #0d47a1;
-    }
-
-    .btn-import:active {
-        transform: scale(0.98);
-    }
-
-    .output {
-        margin-top: 50px;
-        padding: 30px;
-        border: 2px solid #000;
-        display: none;
-    }
-    #outputContent {
-        font-family: 'Courier New', monospace;
-    }
-    .page-footer {
-        border-top: 2px solid #000;
-        padding-top: 8px;
-        margin-top: 12px;
-        text-align: center;
-        font-size: 10px;
-        font-weight: bold;
-    }
-    .legend {
-        font-size: 9px;
-        margin-top: 3px;
-    }
-    .tracker-page {
-        border: 2px solid #000;
-        padding: 15px;
-        margin-bottom: 40px;
-        background: #fff;
-    }
-    .title-row {
-        border-bottom: 2px solid #000;
-        padding-bottom: 8px;
-        margin-bottom: 12px;
-        font-size: 10px;
-        font-weight: bold;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .tracker-title {
-        font-size: 13px;
-        letter-spacing: 2px;
-        font-weight: bold;
-    }
-    .page-info {
-        font-size: 11px;
-        text-align: right;
-    }
-    .habit-row {
-        display: flex;
-        align-items: center;
-        margin-bottom: 2px;
-        padding: 2px 0;
-        border-bottom: 1px solid #ccc;
-        font-size: 9px;
-        min-height: 20px;
-    }
-    .habit-label-line {
-        width: 200px;
-        font-weight: bold;
-        margin-right: 6px;
-        white-space: normal;
-        overflow: visible;
-        flex-shrink: 0;
-    }
-    .days-row {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 2px;
-        align-items: center;
-        flex-shrink: 0;
-    }
-    .day-box {
-        width: 18px;
-        height: 18px;
-        border: 1px solid #000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 9px;
-        font-weight: bold;
-        line-height: 1;
-        flex-shrink: 0;
-    }
-    .obs-field {
-        margin-left: 6px;
-        font-size: 7px;
-        border-bottom: 1px solid #000;
-        padding: 0 1px;
-        min-width: 80px;
-        flex-grow: 1;
-    }
-
-    @page {
-        size: A4 landscape;
-        margin: 10mm;
-    }
-    @media print {
+    <meta charset="UTF-8">
+    <title>Habit Tracker Master 3.2</title>
+    <style>
+        * { box-sizing: border-box; }
         body {
-            padding: 0;
+            font-family: 'Courier New', monospace;
+            background: #fff;
+            color: #000;
+            padding: 40px;
             margin: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 2px;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+        }
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 30px 0 10px 0;
+            border-left: 4px solid #000;
+            padding-left: 10px;
+        }
+        .habit-group {
+            border: 1px solid #000;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .habit-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .habit-item:last-child { border-bottom: none; }
+        .habit-item.optional {
+            background: #f5f5f5;
+            border: 2px dashed #000;
+            padding: 6px;
+            margin-bottom: 4px;
+        }
+        .drag-handle {
+            cursor: grab;
+            margin-right: 8px;
+            user-select: none;
+            font-size: 14px;
+        }
+        .habit-number {
+            width: 25px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .priority-checkbox {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #000;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 8px;
             background: #fff;
         }
-        .container { display: none; }
-        #output {
-            display: block;
+        .priority-checkbox:checked::before {
+            content: "!";
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .habit-label {
+            flex: 1;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 1px 2px;
+        }
+        .habit-label:hover {
+            background: #f0f0f0;
+            border-radius: 2px;
+        }
+        .edit-input {
+            width: 90%;
             border: none;
-            margin: 0;
-            padding: 0;
+            border-bottom: 2px solid #000;
+            background: transparent;
+            padding: 4px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .form-field { margin-bottom: 15px; }
+        .form-field label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .form-field input,
+        .form-field textarea {
+            width: 100%;
+            border: none;
+            border-bottom: 2px solid #000;
+            background: transparent;
+            padding: 6px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .form-field textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .btn-primary {
+            width: 100%;
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 18px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 40px;
+            letter-spacing: 1px;
+        }
+        .btn-primary:hover { background: #333; }
+        
+        .import-section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px dashed #333;
+            background: #f9f9f9;
+            text-align: center;
+        }
+        
+        .import-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+        
+        .btn-import {
+            padding: 12px 24px;
+            border: 2px solid #1565c0;
+            background: #1565c0;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            letter-spacing: 1px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-import:hover {
+            background: #0d47a1;
+            border-color: #0d47a1;
+        }
+        
+        .btn-import:active {
+            transform: scale(0.98);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 13px;
+            border: 2px dashed #ccc;
+            margin: 40px 0;
+        }
+        .empty-state h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .empty-state p {
+            margin-bottom: 10px;
+            line-height: 1.8;
+        }
+        
+        .output {
+            margin-top: 50px;
+            padding: 30px;
+            border: 2px solid #000;
+            display: none;
         }
         #outputContent {
-            margin: 0;
-            padding: 0;
+            font-family: 'Courier New', monospace;
+        }
+        .page-footer {
+            border-top: 2px solid #000;
+            padding-top: 10px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 11px;
+            font-style: italic;
+        }
+        .legend {
+            margin-top: 5px;
+            font-size: 10px;
+            color: #666;
         }
         .tracker-page {
             page-break-after: always;
-            margin: 0;
-            padding: 8mm;
-            border: 2px solid #000;
         }
-        .btn-primary { display: none !important; }
-        .habit-label-line { width: 180px; }
+        .title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #000;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .tracker-title {
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        .page-info {
+            font-size: 10px;
+            text-align: right;
+        }
+        .habit-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3px;
+            padding: 3px 0;
+            border-bottom: 1px solid #ccc;
+            font-size: 9px;
+            min-height: 24px;
+        }
+        .habit-label-line {
+            width: 180px;
+            flex-shrink: 0;
+            font-weight: bold;
+            padding-right: 8px;
+            white-space: normal;
+        }
+        .days-row {
+            display: flex;
+            gap: 2px;
+            flex-wrap: nowrap;
+            flex-shrink: 0;
+        }
         .day-box {
             width: 18px;
             height: 18px;
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 9px;
+            font-weight: bold;
+            flex-shrink: 0;
         }
         .obs-field {
-            min-width: 80px;
             font-size: 7px;
+            color: #666;
+            border-bottom: 1px solid #000;
+            padding: 0 1px;
+            min-width: 80px;
+            flex-grow: 1;
         }
-    }
-</style>
+        @media print {
+            body { padding: 0; }
+            .container { max-width: 100%; }
+            .output { border: none; padding: 0; }
+            .btn-primary { display: none; }
+            .import-section { display: none; }
+            .empty-state { display: none; }
+            @page { size: A4 landscape; margin: 10mm; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-    <h1>HABIT TRACKER MASTER 3.2</h1>
-
-    <div class="section-title">INFORMAÇÕES DO RELATÓRIO</div>
-    <div class="habit-group">
-        <div class="form-field">
-            <label>Nome/Operador:</label>
-            <input id="userName" type="text" placeholder="Seu nome">
+    
+    <div class="container">
+        <h1>🎯 HABIT TRACKER MASTER 3.2</h1>
+        
+        <div id="emptyState" class="empty-state">
+            <h2>📋 Tracker vazio</h2>
+            <p>Importe seus hábitos do <strong>Habit Stack</strong> usando o botão laranja</p>
+            <p>ou carregue um arquivo JSON abaixo.</p>
+            <p><strong>Dica:</strong> Abra o Stack, clique em "🎯 ABRIR TRACKER" e seus dados virão automaticamente!</p>
         </div>
-        <div class="form-field">
-            <label>Mês/Período:</label>
-            <input id="userMonth" type="text" placeholder="Ex: Janeiro 2026">
-        </div>
-        <div class="form-field">
-            <label>Objetivo:</label>
-            <input id="userObjective" type="text" placeholder="Ex: Cutting agressivo - perder 8kg">
-        </div>
-        <div class="form-field">
-            <label>Frase Motivacional:</label>
-            <textarea id="userPhrase" placeholder="Ex: Não quebre a corrente"></textarea>
-        </div>
-    </div>
-
-    <div class="section-title">HÁBITOS INEGOCIÁVEIS</div>
-    <div id="nonnegotiableHabits" class="habit-group"></div>
-
-    <div class="section-title">HÁBITOS ESPECÍFICOS (OPCIONAIS)</div>
-    <div class="habit-group">
-        <input id="customHabit" style="width:80%; border:none; border-bottom:2px solid #000; padding:6px;" placeholder="Novo hábito">
-        <button onclick="addCustomHabit()" style="padding:6px 12px; border:1px solid #000; background:#fff; cursor:pointer;">Adicionar</button>
-    </div>
-    <div id="customHabits"></div>
-
-    <div class="section-title">CONFIGURAÇÕES</div>
-    <div class="habit-group">
-        <div style="margin-bottom:10px;">
-            <label>Dias: </label>
-            <input id="days" type="number" value="30" min="7" max="60" style="border:none; border-bottom:1px solid #000;">
-        </div>
-
+        
         <div class="import-section">
-            <label>📥 IMPORTAR HÁBITOS DO HABIT STACK</label>
-            <input type="file" id="stackJsonInput" accept="application/json" style="display:none" onchange="importFromStackJson(event)">
-            <button class="btn-import" onclick="document.getElementById('stackJsonInput').click()">
+            <label>📥 IMPORTAR HÁBITOS DO HABIT STACK (JSON)</label>
+            <input type="file" id="importFile" accept=".json" onchange="importFromStackJson(event)" style="display:none;">
+            <button class="btn-import" onclick="document.getElementById('importFile').click()">
                 SELECIONAR ARQUIVO JSON
             </button>
         </div>
+        
+        <div class="form-field">
+            <label>Nome do Operador</label>
+            <input type="text" id="userName" placeholder="Seu nome">
+        </div>
+        
+        <div class="form-field">
+            <label>Período (Mês/Ano)</label>
+            <input type="text" id="userMonth" placeholder="Ex: Janeiro 2026">
+        </div>
+        
+        <div class="form-field">
+            <label>Objetivo</label>
+            <textarea id="userObjective" placeholder="Ex: Cutting agressivo - Perder 8kg"></textarea>
+        </div>
+        
+        <div class="form-field">
+            <label>Frase Motivacional</label>
+            <input type="text" id="userPhrase" placeholder="Ex: Não quebre a corrente">
+        </div>
+        
+        <div class="form-field">
+            <label>Número de dias</label>
+            <input type="number" id="days" value="30" min="7" max="31">
+        </div>
+        
+        <div class="section-title">📋 HÁBITOS PRINCIPAIS</div>
+        <div class="habit-group" id="habitList"></div>
+        
+        <div class="section-title">➕ HÁBITOS OPCIONAIS (###)</div>
+        <div class="habit-group">
+            <div style="margin-bottom:10px; font-size:12px; color:#666;">
+                Adicione hábitos extras que você quer rastrear mas não são obrigatórios:
+            </div>
+            <input type="text" id="customHabitInput" placeholder="Nome do hábito opcional" style="width:70%; padding:6px; margin-right:10px; font-family:'Courier New', monospace;">
+            <button onclick="addCustomHabit()" style="padding:6px 12px; border:1px solid #000; background:#fff; cursor:pointer; font-family:'Courier New', monospace;">+ ADICIONAR</button>
+            <div id="customHabitList" style="margin-top:10px;"></div>
+        </div>
+        
+        <button class="btn-primary" onclick="generate()">🚀 GERAR TRACKER</button>
+        
+        <div class="output" id="output">
+            <div id="outputContent"></div>
+        </div>
     </div>
-
-    <button class="btn-primary" onclick="generate()">GERAR HABIT TRACKER</button>
-</div>
-
-<div id="output" class="output">
-    <div id="outputContent"></div>
-    <button onclick="window.print()" class="btn-primary">IMPRIMIR EM A4 PAISAGEM</button>
-</div>
-
-<script>
-let habits = [
-    { text: "06:30 - Cardio Z2 (30 min)", priority: false },
-    { text: "Café da manhã", priority: false },
-    { text: "Hidratação (3L)", priority: false },
-    { text: "Almoço", priority: false },
-    { text: "Lanche pré-treino", priority: false },
-    { text: "Treino 17:00", priority: false },
-    { text: "Cardio pós-treino (30 min)", priority: false },
-    { text: "Whey + banana", priority: false },
-    { text: "Última refeição", priority: false },
-    { text: "Sono (7-8h)", priority: false },
-    { text: "Reflexão estoica (5 min)", priority: false },
-    { text: "Corrida no quartel", priority: false },
-    { text: "Estudo MBA", priority: false },
-    { text: "Estudo PRF", priority: false }
-];
-
-let customHabits = [];
-let dragSrcIndex = null;
-
-function loadFromStorage() {
-    const saved = localStorage.getItem('habitData_tracker_v32');
-    if (saved) {
-        const data = JSON.parse(saved);
-        if (data.habits) habits = data.habits;
-        if (data.customHabits) customHabits = data.customHabits;
-        if (data.userName) document.getElementById('userName').value = data.userName;
-        if (data.userMonth) document.getElementById('userMonth').value = data.userMonth;
-        if (data.userObjective) document.getElementById('userObjective').value = data.userObjective;
-        if (data.userPhrase) document.getElementById('userPhrase').value = data.userPhrase;
-        if (data.days) document.getElementById('days').value = data.days;
-    }
-}
-
-function checkTransferData() {
-    const transfer = localStorage.getItem('habitData_fromStack');
-    if (transfer) {
-        try {
-            const data = JSON.parse(transfer);
-
-            if (data.metadata) {
-                if (data.metadata.operador) document.getElementById('userName').value = data.metadata.operador;
-                if (data.metadata.periodo) document.getElementById('userMonth').value = data.metadata.periodo;
-                if (data.metadata.objetivo) document.getElementById('userObjective').value = data.metadata.objetivo;
-                if (data.metadata.frase) document.getElementById('userPhrase').value = data.metadata.frase;
+    
+    <script>
+        let habits = [];
+        let customHabits = [];
+        
+        function checkTransferData() {
+            const transferData = localStorage.getItem("habitStack_transfer");
+            if (transferData) {
+                try {
+                    const data = JSON.parse(transferData);
+                    if (data.metadata) {
+                        document.getElementById('userName').value = data.metadata.operador || "";
+                        document.getElementById('userMonth').value = data.metadata.periodo || "";
+                        document.getElementById('userObjective').value = data.metadata.objetivo || "";
+                        document.getElementById('userPhrase').value = data.metadata.frase || "";
+                    }
+                    if (data.habits && data.habits.length > 0) {
+                        habits = data.habits.map(h =>
+                        ({
+                            text: (h.nome || "").toString(),
+                            priority: false
+                        }));
+                        render();
+                        document.getElementById('emptyState').style.display = 'none';
+                        alert("✅ Hábitos carregados do Stack com sucesso!");
+                    }
+                    localStorage.removeItem("habitStack_transfer");
+                } catch(e) {
+                    console.error("Erro ao carregar dados transferidos:", e);
+                }
             }
-
-            if (data.habits && Array.isArray(data.habits)) {
-                habits.length = 0;
-                habits.push(...data.habits.map(h =>
- ({
-                    text: (h.nome || h.text || "").toString(),
-                    priority: false
-                })));
-                render();
-                saveToStorage();
-            }
-
-            localStorage.removeItem('habitData_fromStack');
-            alert("✅ Hábitos carregados do Stack com sucesso!");
-
-        } catch(e) {
-            console.error("Erro ao carregar dados do Stack:", e);
         }
-    }
-}
-
-function saveToStorage() {
-    const data = {
-        habits,
-        customHabits,
-        userName: document.getElementById('userName').value,
-        userMonth: document.getElementById('userMonth').value,
-        userObjective: document.getElementById('userObjective').value,
-        userPhrase: document.getElementById('userPhrase').value,
-        days: document.getElementById('days').value,
-        format: 'tracker'
-    };
-    localStorage.setItem('habitData_tracker_v32', JSON.stringify(data));
-}
-
-function render() {
-    const container = document.getElementById("nonnegotiableHabits");
-    container.innerHTML = "";
-    habits.forEach((habit, index) =>
- {
-        let item = document.createElement("div");
-        item.className = "habit-item";
-        item.draggable = true;
-        item.dataset.index = index;
-
-        item.innerHTML = `
-            <span class="drag-handle">☰</span>
-            <span class="habit-number">${index + 1}.</span>
-            <input type="checkbox" ${habit.priority ? 'checked' : ''} 
-                   onchange="togglePriority(${index})" class="priority-checkbox">
-            <span class="habit-label" ondblclick="editHabitText(${index}, this)">
-                ${habit.text}
-            </span>
-        `;
-
-        item.addEventListener("dragstart", dragStart);
-        item.addEventListener("dragover", dragOver);
-        item.addEventListener("drop", drop);
-        item.addEventListener("dragend", dragEnd);
-        container.appendChild(item);
-    });
-    saveToStorage();
-}
-
-function togglePriority(i) {
-    habits[i].priority = !habits[i].priority;
-    saveToStorage();
-    render();
-}
-
-function dragStart(e) {
-    dragSrcIndex = this.dataset.index;
-    this.classList.add("dragging");
-}
-function dragOver(e) { e.preventDefault(); }
-function drop(e) {
-    const targetIndex = this.dataset.index;
-    const moved = habits.splice(dragSrcIndex, 1)[0];
-    habits.splice(targetIndex, 0, moved);
-    render();
-}
-function dragEnd() {
-    this.classList.remove("dragging");
-}
-
-function editHabitText(index, element) {
-    const oldValue = element.innerText.trim();
-
-    const input = document.createElement("input");
-    input.type = "text";
-    input.className = "edit-input";
-    input.value = oldValue;
-
-    element.replaceWith(input);
-    input.focus();
-    input.select();
-
-    const save = () =>
- {
-        const newValue = input.value.trim() || oldValue;
-        habits[index].text = newValue;
-
-        const span = document.createElement("span");
-        span.className = "habit-label";
-        span.setAttribute("ondblclick", `editHabitText(${index}, this)`);
-        span.innerText = newValue;
-
-        input.replaceWith(span);
-        saveToStorage();
-        render();
-    };
-
-    input.addEventListener("blur", save);
-    input.addEventListener("keypress", (e) =>
- {
-        if (e.key === "Enter") {
+        
+        function render() {
+            const list = document.getElementById("habitList");
+            if (habits.length === 0) {
+                list.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Nenhum hábito carregado ainda</div>';
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+            
+            document.getElementById('emptyState').style.display = 'none';
+            list.innerHTML = habits.map((h, i) =>
+            `
+        <div class="habit-item" draggable="true" data-index="${i}">
+            <span class="drag-handle">⋮⋮</span>
+            <span class="habit-number">${i + 1}.</span>
+            <input type="checkbox" class="priority-checkbox" ${h.priority ? 'checked' : ''} onchange="togglePriority(${i})">
+            <label class="habit-label" ondblclick="editHabit(${i})">${h.text}</label>
+        </div>
+    `).join("");
+            
+            attachDragListeners();
+            saveToStorage();
+        }
+        
+        function attachDragListeners() {
+            const items = document.querySelectorAll('.habit-item');
+            items.forEach(item =>
+            {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+        }
+        
+        let draggedIndex = null;
+        
+        function handleDragStart(e) {
+            draggedIndex = parseInt(e.target.dataset.index);
+            e.target.style.opacity = '0.5';
+        }
+        
+        function handleDragOver(e) {
             e.preventDefault();
-            save();
+            return false;
         }
-    });
-}
-
-function addCustomHabit() {
-    const val = document.getElementById("customHabit").value.trim();
-    if (!val) return;
-    customHabits.push({ text: val, priority: false });
-    document.getElementById("customHabit").value = "";
-    renderCustom();
-}
-function renderCustom() {
-    const container = document.getElementById("customHabits");
-    container.innerHTML = customHabits.map((h, i) =>
- `
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetIndex = parseInt(e.target.closest('.habit-item').dataset.index);
+            if (draggedIndex !== targetIndex) {
+                const [draggedItem] = habits.splice(draggedIndex, 1);
+                habits.splice(targetIndex, 0, draggedItem);
+                render();
+            }
+            return false;
+        }
+        
+        function handleDragEnd(e) {
+            e.target.style.opacity = '1';
+            draggedIndex = null;
+        }
+        
+        function togglePriority(i) {
+            habits[i].priority = !habits[i].priority;
+            saveToStorage();
+        }
+        
+        function editHabit(i) {
+            const newText = prompt("Editar hábito:", habits[i].text);
+            if (newText !== null && newText.trim() !== "") {
+                habits[i].text = newText.trim();
+                render();
+            }
+        }
+        
+        function addCustomHabit() {
+            const input = document.getElementById("customHabitInput");
+            const text = input.value.trim();
+            if (text) {
+                customHabits.push({ text: text, priority: false });
+                input.value = "";
+                renderCustom();
+            }
+        }
+        
+        function renderCustom() {
+            const list = document.getElementById("customHabitList");
+            list.innerHTML = customHabits.map((h, i) =>
+            `
         <div class="habit-item optional">
             <label class="habit-label">${h.text}</label>
             <button onclick="removeCustom(${i})" style="padding:4px 8px; border:1px solid #000; background:#fff; cursor:pointer; margin-left:10px;">X</button>
         </div>
     `).join("");
-    saveToStorage();
-}
-function removeCustom(i) {
-    customHabits.splice(i, 1);
-    renderCustom();
-}
-
-function importFromStackJson(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-
-            if (data.metadata && data.habits) {
-                if (data.metadata.operador) {
-                    document.getElementById('userName').value = data.metadata.operador;
+            saveToStorage();
+        }
+        
+        function removeCustom(i) {
+            customHabits.splice(i, 1);
+            renderCustom();
+        }
+        
+        function importFromStackJson(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.metadata && data.habits) {
+                        if (data.metadata.operador) {
+                            document.getElementById('userName').value = data.metadata.operador;
+                        }
+                        if (data.metadata.periodo) {
+                            document.getElementById('userMonth').value = data.metadata.periodo;
+                        }
+                        if (data.metadata.objetivo) {
+                            document.getElementById('userObjective').value = data.metadata.objetivo;
+                        }
+                        if (data.metadata.frase) {
+                            document.getElementById('userPhrase').value = data.metadata.frase;
+                        }
+                        
+                        habits = data.habits.map(h =>
+                        ({
+                            text: (h.nome || h.text || "").toString(),
+                            priority: false
+                        }));
+                        
+                    } else if (Array.isArray(data)) {
+                        habits = data.map(h =>
+                        ({
+                            text: (h.nome || h.text || "").toString(),
+                            priority: false
+                        }));
+                    } else {
+                        alert("JSON inválido: formato não reconhecido.");
+                        return;
+                    }
+                    
+                    render();
+                    saveToStorage();
+                    alert("✅ Hábitos e informações carregados do Habit Stack!");
+                    
+                } catch (err) {
+                    alert("Erro ao ler arquivo JSON: " + err.message);
+                } finally {
+                    event.target.value = "";
                 }
-                if (data.metadata.periodo) {
-                    document.getElementById('userMonth').value = data.metadata.periodo;
-                }
-                if (data.metadata.objetivo) {
-                    document.getElementById('userObjective').value = data.metadata.objetivo;
-                }
-                if (data.metadata.frase) {
-                    document.getElementById('userPhrase').value = data.metadata.frase;
-                }
-
-                habits = data.habits.map(h =>
- ({
-                    text: (h.nome || h.text || "").toString(),
-                    priority: false
-                }));
-
-            } else if (Array.isArray(data)) {
-                habits = data.map(h =>
- ({
-                    text: (h.nome || h.text || "").toString(),
-                    priority: false
-                }));
-            } else {
-                alert("JSON inválido: formato não reconhecido.");
+            };
+            reader.readAsText(file);
+        }
+        
+        function generate() {
+            if (habits.length === 0) {
+                alert("⚠️ Adicione ou importe hábitos antes de gerar o tracker!");
                 return;
             }
-
-            render();
-            saveToStorage();
-            alert("Hábitos e informações carregados do Habit Stack!");
-
-        } catch (err) {
-            alert("Erro ao ler arquivo JSON: " + err.message);
-        } finally {
-            event.target.value = "";
-        }
-    };
-    reader.readAsText(file);
-}
-
-function generate() {
-    const selected = habits.concat(customHabits);
-    const days = Number(document.getElementById("days").value);
-    const userName = document.getElementById('userName').value || "_______________";
-    const userMonth = document.getElementById('userMonth').value || "_______________";
-    const userObjective = document.getElementById('userObjective').value || "_______________";
-    let userPhrase = document.getElementById('userPhrase').value || "Não quebre a corrente";
-    if (!userPhrase.startsWith('"')) {
-        userPhrase = '"' + userPhrase + '"';
-    }
-    const footer = `
+            
+            const selected = habits.concat(customHabits);
+            const days = Number(document.getElementById("days").value);
+            const userName = document.getElementById('userName').value || "_______________";
+            const userMonth = document.getElementById('userMonth').value || "_______________";
+            const userObjective = document.getElementById('userObjective').value || "_______________";
+            let userPhrase = document.getElementById('userPhrase').value || "Não quebre a corrente";
+            if (!userPhrase.startsWith('"')) {
+                userPhrase = '"' + userPhrase + '"';
+            }
+            const footer = `
         <div class="page-footer">
             ${userPhrase}
             <div class="legend">X = completo &nbsp; | &nbsp; O = parcial</div>
         </div>
     `;
-
-    let html = "";
-    html += `<div class="tracker-page">`;
-    html += `<div class="title-row">`;
-    html += `<span class="tracker-title">HABIT TRACKER - ${days} DIAS</span>`;
-    html += `<span class="page-info">OPERADOR: ${userName}  |  PERÍODO: ${userMonth}  |  OBJETIVO: ${userObjective}</span>`;
-    html += `</div>`;
-
-    selected.forEach((habit, idx) =>
- {
-        const isOptional = idx >= habits.length;
-        const isPriority = habit.priority;
-        const typeField = isPriority ? '<b>!!!</b>' : (isOptional ? '<b>###</b>' : '');
-        html += `<div class="habit-row">`;
-        html += `<span class="habit-label-line">${typeField} ${habit.text}</span>`;
-        html += `<div class="days-row">`;
-        for (let d = 1; d <= days; d++) {
-            html += `<div class="day-box">${d}</div>`;
-        }
-        html += `</div>`;
-        html += `<div class="obs-field">Obs.:</div>`;
-        html += `</div>`;
-    });
-
-    html += footer;
-    html += `</div>`;
-
-    document.getElementById("outputContent").innerHTML = html;
-    document.getElementById("output").style.display = "block";
-    document.getElementById("output").scrollIntoView({ behavior: "smooth" });
-    saveToStorage();
-}
-
-loadFromStorage();
-render();
-renderCustom();
-checkTransferData();
-</script>
-</body>
-</html>
+            
+            let html = "";
+            html += `<div class="tracker-page">`;
+                html += `<div class="title-row">`;
+                    html += `<span class="tracker-title">HABIT TRACKER - ${days} DIAS</span>`;
+                    html += `<span class="page-info">OPERADOR: ${userName}  |  PERÍODO: ${userMonth}  |  OBJETIVO: ${userObjective}</span>`;
+                    html += `</div>`;
+                    
+                    selected.forEach((habit, idx) =>
+                    {
+                        const isOptional = idx >= habits.length;
+                        const isPriority = habit.priority;
+                        const typeField = isPriority ? '<b>!!!</b>' : (isOptional ? '<b>###</b>' : '');
+                        html += `<div class="habit-row">`;
+                            html += `<span class="habit-label-line">${typeField} ${habit.text}</span>`;
+                            html += `<div class="days-row">`;
+                                for (let d = 1; d <= days; d++) {
+                                    html += `<div class="day-box">${d}</div>`;
+                                }
+                                html += `</div>`;
+                                html += `<div class="obs-field">Obs.:</div>`;
+                                html += `</div>`;
+                            });
+                            
+                            html += footer;
+                            html += `</div>`;
+                            
+                            document.getElementById("outputContent").innerHTML = html;
+                            document.getElementById("output").style.display = "block";
+                            document.getElementById("output").scrollIntoView({ behavior: "smooth" });
+                            saveToStorage();
+                        }
+                        
+                        function saveToStorage() {
+                            localStorage.setItem("habitTracker_v32_habits", JSON.stringify(habits));
+                            localStorage.setItem("habitTracker_v32_custom", JSON.stringify(customHabits));
+                        }
+                        
+                        function loadFromStorage() {
+                            const savedHabits = localStorage.getItem("habitTracker_v32_habits");
+                            const savedCustom = localStorage.getItem("habitTracker_v32_custom");
+                            
+                            if (savedHabits) {
+                                try {
+                                    habits = JSON.parse(savedHabits);
+                                    if (habits.length > 0) {
+                                        document.getElementById('emptyState').style.display = 'none';
+                                    }
+                                } catch(e) {}
+                            }
+                            
+                            if (savedCustom) {
+                                try { customHabits = JSON.parse(savedCustom); } catch(e) {}
+                            }
+                        }
+                        
+                        loadFromStorage();
+                        render();
+                        renderCustom();
+                        checkTransferData();
+                    </script>
+                </body>
+                </html>
