@@ -130,6 +130,8 @@
             font-size: 16px;
             margin-top: 40px;
             letter-spacing: 1px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
         }
         .btn-primary:hover { background: #333; }
         
@@ -279,6 +281,10 @@
             .btn-primary { display: none; }
             .import-section { display: none; }
             .empty-state { display: none; }
+            .section-title { display: none; }
+            .habit-group { display: none; }
+            .form-field { display: none; }
+            h1 { display: none; }
             @page { size: A4 landscape; margin: 10mm; }
         }
     </style>
@@ -345,6 +351,7 @@
         
         <div class="output" id="output">
             <div id="outputContent"></div>
+            <button class="btn-primary" onclick="window.print()" style="margin-top:30px;">🖨️ IMPRIMIR TRACKER</button>
         </div>
     </div>
     
