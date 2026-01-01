@@ -1,467 +1,825 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Habit Stack Design 3.2</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Courier New', monospace; background: #f9f9f9; padding: 8px; color: #000; }
-        .page { border: 2px solid #333; padding: 12px; max-width: 1300px; margin: 0 auto; background: #fff; display: flex; flex-direction: column; min-height: 95vh; position: relative; }
-        .header { display: flex; justify-content: space-between; align-items: center; font-size: 11px; border-bottom: 3px solid #333; padding: 10px 0 4px 0; margin-bottom: 10px; position: relative; }
-        .title { font-weight: bold; font-size: 13px; letter-spacing: 2px; }
-        .info { font-weight: bold; text-align: right; }
-        .version-info { position: absolute; top: 2px; right: 0; font-size: 8px; color: #666; }
-        .editable-header { cursor: pointer; border-bottom: 1px dashed transparent; padding: 0 2px; }
-        .editable-header:hover { border-bottom-color: #333; background: #f5f5f5; }
-        .stack-layout { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 20px; align-items: start; margin-bottom: 12px; position: relative; }
-        .habit-card { border: 1px solid #333; padding: 6px; font-size: 8px; line-height: 1.3; background: #fdfdfd; position: relative; min-height: 110px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); page-break-inside: avoid; break-inside: avoid; cursor: grab; transition: all 0.2s ease; user-select: none; }
-        .habit-card:active { cursor: grabbing; }
-        .habit-card.dragging { opacity: 0.5; transform: scale(0.98); box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 100; }
-        .habit-card.drag-over-before { border-top: 3px solid #333; padding-top: 3px; }
-        .habit-card.drag-over-after { border-bottom: 3px solid #333; padding-bottom: 3px; }
-        .habit-card::after { content: ''; position: absolute; right: -20px; top: 50%; width: 20px; height: 1px; background: #ddd; z-index: 0; }
-        .habit-card.last-in-row::after, .habit-card.last-overall::after { display: none; }
-        .habit-title { font-weight: bold; font-size: 9px; margin-bottom: 4px; border-bottom: 1px solid #333; padding-bottom: 2px; display: flex; justify-content: space-between; align-items: center; gap: 4px; }
-        .habit-title-text { flex: 1; cursor: pointer; user-select: text; }
-        .habit-title-text:hover { background: #f0f0f0; }
-        .difficulty-badge { display: inline-block; font-size: 7px; padding: 2px 4px; border: 1px solid #333; font-weight: bold; cursor: pointer; border-radius: 2px; white-space: nowrap; margin-right: 17px; }
-        .badge-facil { background: #e8f5e9; color: #2e7d32; }
-        .badge-medio { background: #fff9c4; color: #f57f17; }
-        .badge-dificil { background: #ffccbc; color: #d84315; }
-        .difficulty-badge:hover { opacity: 0.8; }
-        .btn-delete { position: absolute; top: 5px; right: 3px; width: 16px; height: 16px; border: 1px solid #b71c1c; background: #ffebee; color: #b71c1c; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 0 2px rgba(0,0,0,0.2); z-index: 2; }
-        .btn-delete:hover { background: #b71c1c; color: #fff; }
-        .habit-row { display: flex; gap: 3px; margin-bottom: 2px; align-items: baseline; }
-        .label { font-weight: bold; width: 50px; flex-shrink: 0; font-size: 7px; color: #555; display: flex; align-items: center; gap: 2px; }
-        .label-icon { font-size: 8px; }
-        .value { flex: 1; cursor: pointer; padding: 1px 2px; font-size: 8px; user-select: text; }
-        .value:hover { background: #f5f5f5; border-radius: 2px; }
-        .warning-label { font-weight: bold; color: #b71c1c; font-size: 7px; margin-top: 3px; display: flex; align-items: center; gap: 2px; }
-        .warning-value { font-size: 8px; cursor: pointer; padding: 1px 2px; color: #c62828; user-select: text; }
-        .warning-value:hover { background: #ffebee; border-radius: 2px; }
-        .edit-input { width: 100%; border: none; border-bottom: 1px solid #333; font-size: 8px; font-family: inherit; background: #fffef8; padding: 1px 2px; outline: none; }
-        .difficulty-select { width: auto; border: 1px solid #333; padding: 1px 3px; font-size: 8px; font-family: inherit; outline: none; }
-        .arrow { position: absolute; right: -14px; top: 50%; transform: translateY(-50%); font-size: 14px; font-weight: bold; color: #666; z-index: 1; }
-        .habit-card.last-in-row .arrow, .habit-card.last-overall .arrow { display: none; }
-        .controls { margin-top: 6px; display: flex; justify-content: space-between; align-items: center; }
-        .add-habit-section { display: flex; align-items: center; gap: 8px; }
-        .add-habit-input { width: 50px; padding: 4px; border: 1px solid #333; font-family: 'Courier New', monospace; font-size: 10px; text-align: center; }
-        .btn-print, .btn-export, .btn-import, .btn-add { padding: 8px 16px; border: 2px solid #333; background: #333; color: #fff; font-family: 'Courier New', monospace; font-size: 11px; cursor: pointer; letter-spacing: 1px; font-weight: bold; }
-        .btn-print:hover, .btn-export:hover, .btn-import:hover, .btn-add:hover { background: #555; }
-        .btn-add { background: #2e7d32; border-color: #2e7d32; }
-        .btn-add:hover { background: #1b5e20; }
-        .btn-import { background: #1565c0; border-color: #1565c0; }
-        .btn-import:hover { background: #0d47a1; }
-        .controls-right { display: flex; gap: 8px; }
-        .log-container { display: none; border-top: 2px solid #333; padding-top: 4px; margin-top: 4px; max-height: 150px; overflow-y: auto; font-size: 8px; }
-        .log-item { padding: 2px 0; border-bottom: 1px solid #eee; }
-        .show-log-button { cursor: pointer; color: #333; font-size: 9px; margin-top: 4px; }
-        .show-log-button:hover { color: #666; }
-        #importFile { display: none; }
-        @media print {
-            body { padding: 0; margin: 0; background: #fff; }
-            .page { border: 2px solid #000; max-width: 100%; min-height: auto; }
-            .controls { display: none; }
-            .show-log-button { display: none; }
-            #logContainer { display: none !important; }
-            .btn-delete { display: none; }
-            .stack-layout { grid-template-columns: repeat(3, 1fr); gap: 6px 16px; }
-            .habit-card { page-break-inside: avoid; break-inside: avoid; cursor: default; }
-            @page { size: A4 landscape; margin: 8mm; }
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Habit Stack Design 3.3</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Courier New', monospace;
+        background: #f9f9f9;
+        padding: 8px;
+        color: #000;
+    }
+    .page {
+        border: 2px solid #333;
+        padding: 12px;
+        max-width: 1300px;
+        margin: 0 auto;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        min-height: 95vh;
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        border-bottom: 3px solid #333;
+        padding: 10px 0 4px 0;
+        margin-bottom: 10px;
+    }
+    .title { font-weight: bold; font-size: 13px; letter-spacing: 2px; }
+    .version-info { font-size: 8px; color: #666; }
+    .print-header-line {
+        font-size: 11px;
+        font-weight: bold;
+        text-align: center;
+        margin: 0 0 4px 0;
+        padding: 2px 0 4px 0;
+        border-bottom: 1px solid #000;
+        letter-spacing: 0.5px;
+        display: none;
+    }
+    .info-section {
+        border: 1px solid #ddd;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: #fafafa;
+    }
+    .info-row { display: flex; gap: 20px; margin-bottom: 8px; align-items: center; }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .info-label { font-size: 9px; font-weight: bold; color: #555; letter-spacing: 1px; }
+    .info-value {
+        font-size: 11px;
+        cursor: pointer;
+        padding: 4px 6px;
+        border-bottom: 1px dashed #333;
+        background: #fff;
+    }
+    .info-value:hover { background: #f0f0f0; }
+    .edit-input-info {
+        width: 100%;
+        border: none;
+        border-bottom: 2px solid #333;
+        background: #fffef8;
+        padding: 4px 0;
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        outline: none;
+    }
+    .stack-layout {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px 20px;
+        align-items: start;
+        margin-bottom: 12px;
+    }
+    .habit-card {
+        border: 1px solid #333;
+        padding: 6px;
+        font-size: 8px;
+        line-height: 1.3;
+        background: #fdfdfd;
+        position: relative;
+        min-height: 110px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        page-break-inside: avoid;
+        break-inside: avoid;
+        cursor: grab;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+    .habit-card:active { cursor: grabbing; }
+    .habit-card.dragging {
+        opacity: 0.5;
+        transform: scale(0.98);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        z-index: 100;
+    }
+    .habit-card.drag-over-before { border-top: 3px solid #333; padding-top: 3px; }
+    .habit-card.drag-over-after { border-bottom: 3px solid #333; padding-bottom: 3px; }
+    .habit-card::after {
+        content: '';
+        position: absolute;
+        right: -20px;
+        top: 50%;
+        width: 20px;
+        height: 1px;
+        background: #ddd;
+        z-index: 0;
+    }
+    .habit-card.last-in-row::after,
+    .habit-card.last-overall::after { display: none; }
+    .habit-title {
+        font-weight: bold;
+        font-size: 9px;
+        margin-bottom: 4px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 2px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 4px;
+    }
+    .habit-title-text {
+        flex: 1;
+        cursor: pointer;
+        user-select: text;
+    }
+    .habit-title-text:hover { background: #f0f0f0; }
+    .difficulty-badge {
+        display: inline-block;
+        font-size: 7px;
+        padding: 2px 4px;
+        border: 1px solid #333;
+        font-weight: bold;
+        cursor: pointer;
+        border-radius: 2px;
+        white-space: nowrap;
+        margin-right: 17px;
+    }
+    .badge-facil { background: #e8f5e9; color: #2e7d32; }
+    .badge-medio { background: #fff9c4; color: #f57f17; }
+    .badge-dificil { background: #ffccbc; color: #d84315; }
+    .difficulty-badge:hover { opacity: 0.8; }
+    .btn-delete {
+        position: absolute;
+        top: 5px;
+        right: 3px;
+        width: 16px;
+        height: 16px;
+        border: 1px solid #b71c1c;
+        background: #ffebee;
+        color: #b71c1c;
+        font-size: 10px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        box-shadow: 0 0 2px rgba(0,0,0,0.2);
+        z-index: 2;
+    }
+    .btn-delete:hover { background: #b71c1c; color: #fff; }
+    .habit-row {
+        display: flex;
+        gap: 3px;
+        margin-bottom: 2px;
+        align-items: baseline;
+    }
+    .label {
+        font-weight: bold;
+        width: 50px;
+        flex-shrink: 0;
+        font-size: 7px;
+        color: #555;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+    }
+    .label-icon { font-size: 8px; }
+    .value {
+        flex: 1;
+        cursor: pointer;
+        padding: 1px 2px;
+        font-size: 8px;
+        user-select: text;
+    }
+    .value:hover { background: #f5f5f5; border-radius: 2px; }
+    .warning-label {
+        font-weight: bold;
+        color: #b71c1c;
+        font-size: 7px;
+        margin-top: 3px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+    }
+    .warning-value {
+        font-size: 8px;
+        cursor: pointer;
+        padding: 1px 2px;
+        color: #c62828;
+        user-select: text;
+    }
+    .warning-value:hover { background: #ffebee; border-radius: 2px; }
+    .edit-input {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #333;
+        font-size: 8px;
+        font-family: inherit;
+        background: #fffef8;
+        padding: 1px 2px;
+        outline: none;
+    }
+    .difficulty-select {
+        width: auto;
+        border: 1px solid #333;
+        padding: 1px 3px;
+        font-size: 8px;
+        font-family: inherit;
+        outline: none;
+    }
+    .arrow {
+        position: absolute;
+        right: -14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 14px;
+        font-weight: bold;
+        color: #666;
+        z-index: 1;
+    }
+    .habit-card.last-in-row .arrow,
+    .habit-card.last-overall .arrow { display: none; }
+    .controls {
+        margin-top: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .add-habit-section {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .add-habit-input {
+        width: 50px;
+        padding: 4px;
+        border: 1px solid #333;
+        font-family: 'Courier New', monospace;
+        font-size: 10px;
+        text-align: center;
+    }
+    .btn-print, .btn-export, .btn-import, .btn-add, .btn-tracker {
+        padding: 8px 16px;
+        border: 2px solid #333;
+        background: #333;
+        color: #fff;
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        cursor: pointer;
+        letter-spacing: 1px;
+        font-weight: bold;
+    }
+    .btn-print:hover, .btn-export:hover, .btn-import:hover, .btn-add:hover, .btn-tracker:hover { background: #555; }
+    .btn-add { background: #2e7d32; border-color: #2e7d32; }
+    .btn-add:hover { background: #1b5e20; }
+    .btn-import { background: #1565c0; border-color: #1565c0; }
+    .btn-import:hover { background: #0d47a1; }
+    .btn-tracker { background: #f57c00; border-color: #f57c00; }
+    .btn-tracker:hover { background: #e65100; }
+    .controls-right { display: flex; gap: 8px; }
+    .log-container {
+        display: none;
+        border-top: 2px solid #333;
+        padding-top: 4px;
+        margin-top: 4px;
+        max-height: 150px;
+        overflow-y: auto;
+        font-size: 8px;
+    }
+    .log-item { padding: 2px 0; border-bottom: 1px solid #eee; }
+    .show-log-button { cursor: pointer; color: #333; font-size: 9px; margin-top: 4px; }
+    .show-log-button:hover { color: #666; }
+    #importFile { display: none; }
+    @media print {
+        body { padding: 0; margin: 0; background: #fff; }
+        .page { border: 2px solid #000; max-width: 100%; min-height: auto; }
+        .header { display: none; }
+        .print-header-line { display: block; border-bottom: 2px solid #000; margin-bottom: 8px; padding: 4px 0; }
+        .info-section { display: none; }
+        .controls { display: none; }
+        .show-log-button { display: none; }
+        #logContainer { display: none !important; }
+        .btn-delete { display: none; }
+        .stack-layout { grid-template-columns: repeat(3, 1fr); gap: 6px 16px; }
+        .habit-card { page-break-inside: avoid; break-inside: avoid; cursor: default; }
+        @page { size: A4 landscape; margin: 8mm; }
+    }
+</style>
 </head>
 <body>
-    <div class="page">
-        <div class="header">
-            <span class="title">HABIT STACK DESIGN</span>
-            <span class="info">
-                OPERADOR: <span class="editable-header" data-field="operador">Matos</span> |
-                PERÍODO: <span class="editable-header" data-field="periodo">Janeiro 2026</span> |
-                OBJETIVO: <span class="editable-header" data-field="objetivo">Recomeço</span>
-            </span>
-            <div class="version-info">VERSÃO: 3.2 | ÚLTIMA ATUALIZAÇÃO: <span id="lastUpdated"></span></div>
-        </div>
-        <div class="stack-layout" id="stackLayout"></div>
-        <div class="controls">
-            <div class="add-habit-section">
-                <input type="number" class="add-habit-input" id="addCount" value="1" min="1" max="10">
-                <button class="btn-add" onclick="addHabits()">+ ADICIONAR HÁBITO(S)</button>
-            </div>
-            <div class="controls-right">
-                <input type="file" id="importFile" accept="application/json" onchange="importData(event)">
-                <button class="btn-import" onclick="document.getElementById('importFile').click()">IMPORTAR JSON</button>
-                <button class="btn-export" onclick="exportData()">EXPORTAR JSON/TXT</button>
-                <button class="btn-print" onclick="window.print()">IMPRIMIR A4 PAISAGEM</button>
-            </div>
-        </div>
-        <div class="show-log-button" onclick="toggleLog()">MOSTRAR HISTÓRICO DE ALTERAÇÕES</div>
-        <div class="log-container" id="logContainer"></div>
+
+<div class="page">
+    <div class="header">
+        <span class="title">HABIT STACK DESIGN</span>
+        <span class="version-info">VERSÃO: 3.3 | ÚLTIMA ATUALIZAÇÃO: <span id="lastUpdated"></span></span>
     </div>
-    <script>
-        const habits = [
-        {nome:"06:30 - Cardio Z2 (30 min)", dif:"facil", gatilho:"Alarme 06:30", desejo:"Acordar cedo / disciplina", acao:"30 min Z2 na bike", recompensa:"Energia + estudo fluido", consequencia:"Atraso + estudo perdido + dia fraco"},
-        {nome:"Café da manhã", dif:"facil", gatilho:"Fim do cardio", desejo:"Reposição e conforto", acao:"Café da manhã da dieta", recompensa:"Energia + foco", consequencia:"Fome → decisões ruins depois"},
-        {nome:"Hidratação (3L)", dif:"facil", gatilho:"Garrafa visível na mesa", desejo:"Saúde / performance", acao:"Beber água ao longo do dia", recompensa:"Disposição + recuperação", consequencia:"Fadiga + cãibras + queda de performance"},
-        {nome:"Almoço", dif:"medio", gatilho:"Horário fixo", desejo:"Nutrição / saciedade", acao:"Refeição balanceada da dieta", recompensa:"Energia para tarde", consequencia:"Fome + irritação + perda de foco"},
-        {nome:"Lanche pré-treino", dif:"medio", gatilho:"1h antes do treino", desejo:"Energia para treino", acao:"Lanche leve planejado", recompensa:"Performance no treino", consequencia:"Treino fraco + hipoglicemia"},
-        {nome:"Treino 17:00", dif:"dificil", gatilho:"Horário fixo da tarde", desejo:"Força / evolução", acao:"Treino de musculação", recompensa:"Progresso + confiança", consequencia:"Estagnação + irritação + perda de massa"},
-        {nome:"Cardio pós-treino (30 min)", dif:"dificil", gatilho:"Fim do treino de musculação", desejo:"Queima de gordura", acao:"30 min Z2 após o treino", recompensa:"Cutting acelerado", consequencia:"Perda de déficit calórico"},
-        {nome:"Whey + banana", dif:"facil", gatilho:"Pós-cardio", desejo:"Recuperação muscular", acao:"Tomar whey + banana", recompensa:"Preservação de massa magra", consequencia:"Catabolismo + perda de massa"},
-        {nome:"Última refeição", dif:"medio", gatilho:"Horário da noite", desejo:"Saciedade / disciplina", acao:"Jantar leve da dieta", recompensa:"Sono tranquilo + cutting", consequencia:"Fome + gasto extra + inchaço"},
-        {nome:"Sono (7-8h)", dif:"medio", gatilho:"Horário fixo para dormir", desejo:"Recuperação total", acao:"Dormir 7-8h sem telas", recompensa:"Energia + foco + recuperação", consequencia:"Fadiga + irritação + catabolismo"},
-        {nome:"Reflexão estoica (5 min)", dif:"facil", gatilho:"Antes de dormir", desejo:"Clareza mental", acao:"5 min de reflexão / escrita", recompensa:"Paz + propósito", consequencia:"Ansiedade + falta de direção"},
-        {nome:"Corrida no quartel", dif:"dificil", gatilho:"Rotina militar", desejo:"Disciplina / resistência", acao:"Corrida 12km", recompensa:"Condicionamento + orgulho", consequencia:"Perda de condicionamento + frustração"},
-        {nome:"Estudo MBA", dif:"dificil", gatilho:"Rotina pós-cardio da manhã", desejo:"Progresso real", acao:"Estudo 1h focado", recompensa:"Avanço no ciclo", consequencia:"Atraso + acúmulo + pressão"},
-        {nome:"Estudo PRF", dif:"dificil", gatilho:"Rotina da noite", desejo:"Melhorar performance", acao:"Estudo 40 min", recompensa:"Consistência + domínio", consequencia:"Perda de ritmo + pressão"}
-        ];
-        const cols = 4;
-        let draggedCard = null;
-        let draggedIdx = null;
-        function render() {
-            const layout = document.getElementById("stackLayout");
-            layout.innerHTML = "";
-            habits.forEach((h, i) => {
-                const card = document.createElement("div");
-                card.className = "habit-card";
-                card.dataset.idx = i;
-                card.draggable = true;
-                if (i === habits.length - 1) {
-                    card.classList.add("last-overall");
-                } else if ((i + 1) % cols === 0) {
-                    card.classList.add("last-in-row");
-                }
-                card.addEventListener("dragstart", (e) => {
-                    draggedCard = card;
-                    draggedIdx = i;
-                    card.classList.add("dragging");
-                    e.dataTransfer.effectAllowed = "move";
-                });
-                card.addEventListener("dragend", (e) => {
-                    card.classList.remove("dragging");
-                    document.querySelectorAll(".habit-card").forEach(c => {
-                        c.classList.remove("drag-over-before", "drag-over-after");
-                    });
-                });
-                card.addEventListener("dragover", (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
-                    if (card !== draggedCard) {
-                        const rect = card.getBoundingClientRect();
-                        const midpoint = rect.top + rect.height / 2;
-                        document.querySelectorAll(".habit-card").forEach(c => {
-                            c.classList.remove("drag-over-before", "drag-over-after");
-                        });
-                        if (e.clientY < midpoint) {
-                            card.classList.add("drag-over-before");
-                        } else {
-                            card.classList.add("drag-over-after");
-                        }
-                    }
-                });
-                card.addEventListener("dragleave", (e) => {
-                    card.classList.remove("drag-over-before", "drag-over-after");
-                });
-                card.addEventListener("drop", (e) => {
-                    e.preventDefault();
-                    if (card !== draggedCard) {
-                        const rect = card.getBoundingClientRect();
-                        const midpoint = rect.top + rect.height / 2;
-                        const targetIdx = parseInt(card.dataset.idx);
-                        const [movedHabit] = habits.splice(draggedIdx, 1);
-                        if (e.clientY < midpoint) {
-                            habits.splice(targetIdx, 0, movedHabit);
-                        } else {
-                            if (draggedIdx < targetIdx) {
-                                habits.splice(targetIdx, 0, movedHabit);
-                            } else {
-                                habits.splice(targetIdx + 1, 0, movedHabit);
-                            }
-                        }
-                        saveHabits();
-                        render();
-                        updateLog(`Hábito reordenado`);
-                    }
-                    card.classList.remove("drag-over-before", "drag-over-after");
-                });
-                const deleteBtn = document.createElement("div");
-                deleteBtn.className = "btn-delete";
-                deleteBtn.textContent = "×";
-                deleteBtn.title = "Excluir hábito";
-                deleteBtn.addEventListener("click", () => deleteHabit(i));
-                card.appendChild(deleteBtn);
-                const arrow = document.createElement("div");
-                arrow.className = "arrow";
-                arrow.textContent = "→";
-                card.appendChild(arrow);
-                const title = document.createElement("div");
-                title.className = "habit-title";
-                const titleText = document.createElement("div");
-                titleText.className = "habit-title-text";
-                titleText.dataset.idx = i;
-                titleText.dataset.key = "nome";
-                titleText.textContent = `${i + 1}. ${h.nome.replace(/^\d+\.\s*/, "")}`;
-                titleText.addEventListener("dblclick", () => editField(titleText));
-                title.appendChild(titleText);
-                const badge = document.createElement("span");
-                badge.className = "difficulty-badge " + getBadgeClass(h.dif);
-                badge.dataset.idx = i;
-                badge.dataset.key = "dif";
-                badge.textContent = h.dif === "facil" ? "FÁCIL" : h.dif === "medio" ? "MÉDIO" : "DIFÍCIL";
-                badge.addEventListener("click", () => editDifficulty(badge));
-                title.appendChild(badge);
-                card.appendChild(title);
-                const fields = [
-                {label: "GATILHO", icon: "⏰", key: "gatilho"},
-                {label: "DESEJO", icon: "🔥", key: "desejo"},
-                {label: "AÇÃO", icon: "⚙️", key: "acao"},
-                {label: "RECOMP", icon: "🎯", key: "recompensa"}
-                ];
-                fields.forEach(f => {
-                    const row = document.createElement("div");
-                    row.className = "habit-row";
-                    const lab = document.createElement("span");
-                    lab.className = "label";
-                    lab.innerHTML = `<span class="label-icon">${f.icon}</span>${f.label}`;
-                    row.appendChild(lab);
-                    const val = document.createElement("span");
-                    val.className = "value";
-                    val.dataset.idx = i;
-                    val.dataset.key = f.key;
-                    val.textContent = h[f.key];
-                    val.addEventListener("dblclick", () => editField(val));
-                    row.appendChild(val);
-                    card.appendChild(row);
-                });
-                const wLabel = document.createElement("div");
-                wLabel.className = "warning-label";
-                wLabel.innerHTML = `<span class="label-icon">⚠️</span>SE NÃO FIZER:`;
-                card.appendChild(wLabel);
-                const wVal = document.createElement("div");
-                wVal.className = "warning-value";
-                wVal.dataset.idx = i;
-                wVal.dataset.key = "consequencia";
-                wVal.textContent = h.consequencia;
-                wVal.addEventListener("dblclick", () => editField(wVal));
-                card.appendChild(wVal);
-                layout.appendChild(card);
+
+    <div class="print-header-line">
+        OPERADOR: <span id="printOperador"></span> |
+        PERÍODO: <span id="printPeriodo"></span> |
+        OBJETIVO: <span id="printObjetivo"></span>
+    </div>
+
+    <div class="info-section">
+        <div class="info-row">
+            <div class="info-field" style="flex: 0.8;">
+                <span class="info-label">OPERADOR</span>
+                <span class="info-value" ondblclick="editInfoField(this, 'operador')" id="infoOperador">Matos</span>
+            </div>
+            <div class="info-field" style="flex: 1;">
+                <span class="info-label">PERÍODO</span>
+                <span class="info-value" ondblclick="editInfoField(this, 'periodo')" id="infoPeriodo">Janeiro 2026</span>
+            </div>
+            <div class="info-field" style="flex: 1.2;">
+                <span class="info-label">OBJETIVO</span>
+                <span class="info-value" ondblclick="editInfoField(this, 'objetivo')" id="infoObjetivo">Recomeço</span>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="info-field">
+                <span class="info-label">FRASE MOTIVACIONAL</span>
+                <span class="info-value" ondblclick="editInfoField(this, 'frase')" id="infoFrase">Não quebre a corrente</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="stack-layout" id="stackLayout"></div>
+
+    <div class="controls">
+        <div class="add-habit-section">
+            <input type="number" class="add-habit-input" id="addCount" value="1" min="1" max="10">
+            <button class="btn-add" onclick="addHabits()">+ ADICIONAR HÁBITO(S)</button>
+        </div>
+        <div class="controls-right">
+            <button class="btn-tracker" onclick="openTracker()">🎯 ABRIR TRACKER</button>
+            <input type="file" id="importFile" accept="application/json" onchange="importData(event)">
+            <button class="btn-import" onclick="document.getElementById('importFile').click()">IMPORTAR JSON</button>
+            <button class="btn-export" onclick="exportData()">EXPORTAR JSON</button>
+            <button class="btn-print" onclick="window.print()">IMPRIMIR A4 PAISAGEM</button>
+        </div>
+    </div>
+
+    <div class="show-log-button" onclick="toggleLog()">MOSTRAR HISTÓRICO DE ALTERAÇÕES</div>
+    <div class="log-container" id="logContainer"></div>
+</div>
+
+<script>
+const habits = [
+    {nome:"06:30 - Cardio Z2 (30 min)", dif:"facil", gatilho:"Alarme 06:30", desejo:"Acordar cedo / disciplina", acao:"30 min Z2 na bike", recompensa:"Energia + estudo fluido", consequencia:"Atraso + estudo perdido + dia fraco"},
+    {nome:"Café da manhã", dif:"facil", gatilho:"Fim do cardio", desejo:"Reposição e conforto", acao:"Café da manhã da dieta", recompensa:"Energia + foco", consequencia:"Fome → decisões ruins depois"},
+    {nome:"Hidratação (3L)", dif:"facil", gatilho:"Garrafa visível na mesa", desejo:"Saúde / performance", acao:"Beber água ao longo do dia", recompensa:"Disposição + recuperação", consequencia:"Fadiga + cãibras + queda de performance"},
+    {nome:"Almoço", dif:"medio", gatilho:"Horário fixo", desejo:"Nutrição / saciedade", acao:"Refeição balanceada da dieta", recompensa:"Energia para tarde", consequencia:"Fome + irritação + perda de foco"},
+    {nome:"Lanche pré-treino", dif:"medio", gatilho:"1h antes do treino", desejo:"Energia para treino", acao:"Lanche leve planejado", recompensa:"Performance no treino", consequencia:"Treino fraco + hipoglicemia"},
+    {nome:"Treino 17:00", dif:"dificil", gatilho:"Horário fixo da tarde", desejo:"Força / evolução", acao:"Treino de musculação", recompensa:"Progresso + confiança", consequencia:"Estagnação + irritação + perda de massa"},
+    {nome:"Cardio pós-treino (30 min)", dif:"dificil", gatilho:"Fim do treino de musculação", desejo:"Queima de gordura", acao:"30 min Z2 após o treino", recompensa:"Cutting acelerado", consequencia:"Perda de déficit calórico"},
+    {nome:"Whey + banana", dif:"facil", gatilho:"Pós-cardio", desejo:"Recuperação muscular", acao:"Tomar whey + banana", recompensa:"Preservação de massa magra", consequencia:"Catabolismo + perda de massa"},
+    {nome:"Última refeição", dif:"medio", gatilho:"Horário da noite", desejo:"Saciedade / disciplina", acao:"Jantar leve da dieta", recompensa:"Sono tranquilo + cutting", consequencia:"Fome + gasto extra + inchaço"},
+    {nome:"Sono (7-8h)", dif:"medio", gatilho:"Horário fixo para dormir", desejo:"Recuperação total", acao:"Dormir 7-8h sem telas", recompensa:"Energia + foco + recuperação", consequencia:"Fadiga + irritação + catabolismo"},
+    {nome:"Reflexão estoica (5 min)", dif:"facil", gatilho:"Antes de dormir", desejo:"Clareza mental", acao:"5 min de reflexão / escrita", recompensa:"Paz + propósito", consequencia:"Ansiedade + falta de direção"},
+    {nome:"Corrida no quartel", dif:"dificil", gatilho:"Rotina militar", desejo:"Disciplina / resistência", acao:"Corrida 12km", recompensa:"Condicionamento + orgulho", consequencia:"Perda de condicionamento + frustração"},
+    {nome:"Estudo MBA", dif:"dificil", gatilho:"Rotina pós-cardio da manhã", desejo:"Progresso real", acao:"Estudo 1h focado", recompensa:"Avanço no ciclo", consequencia:"Atraso + acúmulo + pressão"},
+    {nome:"Estudo PRF", dif:"dificil", gatilho:"Rotina da noite", desejo:"Melhorar performance", acao:"Estudo 40 min", recompensa:"Consistência + domínio", consequencia:"Perda de ritmo + pressão"}
+];
+
+let headerInfo = {
+    operador: "Matos",
+    periodo: "Janeiro 2026",
+    objetivo: "Recomeço",
+    frase: "Não quebre a corrente"
+};
+
+const cols = 4;
+let draggedCard = null;
+let draggedIdx = null;
+
+function syncPrintHeader() {
+    document.getElementById('printOperador').textContent = headerInfo.operador || '';
+    document.getElementById('printPeriodo').textContent = headerInfo.periodo || '';
+    document.getElementById('printObjetivo').textContent = headerInfo.objetivo || '';
+}
+
+function openTracker() {
+    saveHabits();
+    const exportData = {
+        metadata: headerInfo,
+        habits: habits
+    };
+    localStorage.setItem('habitData_fromStack', JSON.stringify(exportData));
+    window.open('habit_tracker_master_3.0.html', '_blank');
+    updateLog('Dados enviados para o Tracker');
+}
+
+function render() {
+    const layout = document.getElementById("stackLayout");
+    layout.innerHTML = "";
+
+    habits.forEach((h, i) =>
+ {
+        const card = document.createElement("div");
+        card.className = "habit-card";
+        card.dataset.idx = i;
+        card.draggable = true;
+
+        if (i === habits.length - 1) card.classList.add("last-overall");
+        else if ((i + 1) % cols === 0) card.classList.add("last-in-row");
+
+        card.addEventListener("dragstart", (e) =>
+ {
+            draggedCard = card;
+            draggedIdx = i;
+            card.classList.add("dragging");
+            e.dataTransfer.effectAllowed = "move";
+        });
+
+        card.addEventListener("dragend", () =>
+ {
+            card.classList.remove("dragging");
+            document.querySelectorAll(".habit-card").forEach(c =>
+ {
+                c.classList.remove("drag-over-before", "drag-over-after");
             });
-            updateTimestamp();
-        }
-        function getBadgeClass(dif) {
-            if (dif === "facil") return "badge-facil";
-            if (dif === "medio") return "badge-medio";
-            return "badge-dificil";
-        }
-        function editField(el) {
-            const idx = parseInt(el.dataset.idx);
-            const key = el.dataset.key;
-            let oldVal = el.innerText;
-            if (key === "nome") {
-                oldVal = oldVal.replace(/^\d+\.\s*/, "");
+        });
+
+        card.addEventListener("dragover", (e) =>
+ {
+            e.preventDefault();
+            if (card !== draggedCard) {
+                const rect = card.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                document.querySelectorAll(".habit-card").forEach(c =>
+ {
+                    c.classList.remove("drag-over-before", "drag-over-after");
+                });
+                if (e.clientY < midpoint) card.classList.add("drag-over-before");
+                else card.classList.add("drag-over-after");
             }
-            const input = document.createElement("input");
-            input.className = "edit-input";
-            input.value = oldVal;
-            el.replaceWith(input);
-            input.focus();
-            input.select();
-            const save = () => {
-                let newVal = input.value.trim() || oldVal;
-                if (key === "nome") {
-                    newVal = newVal.replace(/^\d+\.\s*/, "");
+        });
+
+        card.addEventListener("dragleave", () =>
+ {
+            card.classList.remove("drag-over-before", "drag-over-after");
+        });
+
+        card.addEventListener("drop", (e) =>
+ {
+            e.preventDefault();
+            if (card !== draggedCard) {
+                const rect = card.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                const targetIdx = parseInt(card.dataset.idx);
+                const [moved] = habits.splice(draggedIdx, 1);
+                if (e.clientY < midpoint) habits.splice(targetIdx, 0, moved);
+                else {
+                    if (draggedIdx < targetIdx) habits.splice(targetIdx, 0, moved);
+                    else habits.splice(targetIdx + 1, 0, moved);
                 }
-                habits[idx][key] = newVal;
-                const span = document.createElement("span");
-                span.className = el.className;
-                span.dataset.idx = idx;
-                span.dataset.key = key;
-                span.innerText = key === "nome" ? `${idx + 1}. ${newVal}` : newVal;
-                span.addEventListener("dblclick", () => editField(span));
-                input.replaceWith(span);
                 saveHabits();
-                updateLog(`Campo '${key}' do hábito ${idx+1} alterado`);
-                updateTimestamp();
-            };
-            input.addEventListener("blur", save);
-            input.addEventListener("keypress", (e) => {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    input.blur();
-                }
-            });
+                render();
+                updateLog("Hábito reordenado");
+            }
+            card.classList.remove("drag-over-before", "drag-over-after");
+        });
+
+        const deleteBtn = document.createElement("div");
+        deleteBtn.className = "btn-delete";
+        deleteBtn.textContent = "×";
+        deleteBtn.title = "Excluir hábito";
+        deleteBtn.addEventListener("click", () =>
+ deleteHabit(i));
+        card.appendChild(deleteBtn);
+
+        const arrow = document.createElement("div");
+        arrow.className = "arrow";
+        arrow.textContent = "→";
+        card.appendChild(arrow);
+
+        const title = document.createElement("div");
+        title.className = "habit-title";
+
+        const titleText = document.createElement("div");
+        titleText.className = "habit-title-text";
+        titleText.dataset.idx = i;
+        titleText.dataset.key = "nome";
+        titleText.textContent = `${i + 1}. ${h.nome.replace(/^\d+\.\s*/, "")}`;
+        titleText.addEventListener("dblclick", () =>
+ editField(titleText));
+        title.appendChild(titleText);
+
+        const badge = document.createElement("span");
+        badge.className = "difficulty-badge " + getBadgeClass(h.dif);
+        badge.dataset.idx = i;
+        badge.textContent = h.dif === "facil" ? "FÁCIL" : h.dif === "medio" ? "MÉDIO" : "DIFÍCIL";
+        badge.addEventListener("click", () =>
+ editDifficulty(badge));
+        title.appendChild(badge);
+
+        card.appendChild(title);
+
+        const fields = [
+            {label:"GATILHO", icon:"⏰", key:"gatilho"},
+            {label:"DESEJO", icon:"🔥", key:"desejo"},
+            {label:"AÇÃO", icon:"⚙️", key:"acao"},
+            {label:"RECOMP", icon:"🎯", key:"recompensa"}
+        ];
+
+        fields.forEach(f =>
+ {
+            const row = document.createElement("div");
+            row.className = "habit-row";
+
+            const lab = document.createElement("span");
+            lab.className = "label";
+            lab.innerHTML = `<span class="label-icon">${f.icon}</span>${f.label}`;
+            row.appendChild(lab);
+
+            const val = document.createElement("span");
+            val.className = "value";
+            val.dataset.idx = i;
+            val.dataset.key = f.key;
+            val.textContent = h[f.key];
+            val.addEventListener("dblclick", () =>
+ editField(val));
+            row.appendChild(val);
+
+            card.appendChild(row);
+        });
+
+        const wLabel = document.createElement("div");
+        wLabel.className = "warning-label";
+        wLabel.innerHTML = `<span class="label-icon">⚠️</span>SE NÃO FIZER:`;
+        card.appendChild(wLabel);
+
+        const wVal = document.createElement("div");
+        wVal.className = "warning-value";
+        wVal.dataset.idx = i;
+        wVal.dataset.key = "consequencia";
+        wVal.textContent = h.consequencia;
+        wVal.addEventListener("dblclick", () =>
+ editField(wVal));
+        card.appendChild(wVal);
+
+        layout.appendChild(card);
+    });
+
+    updateTimestamp();
+}
+
+function getBadgeClass(dif) {
+    if (dif === "facil") return "badge-facil";
+    if (dif === "medio") return "badge-medio";
+    return "badge-dificil";
+}
+
+function editField(el) {
+    const idx = parseInt(el.dataset.idx);
+    const key = el.dataset.key;
+    let oldVal = el.innerText;
+    if (key === "nome") oldVal = oldVal.replace(/^\d+\.\s*/, "");
+
+    const input = document.createElement("input");
+    input.className = "edit-input";
+    input.value = oldVal;
+    el.replaceWith(input);
+    input.focus();
+    input.select();
+
+    const save = () =>
+ {
+        let newVal = input.value.trim() || oldVal;
+        if (key === "nome") newVal = newVal.replace(/^\d+\.\s*/, "");
+        habits[idx][key] = newVal;
+
+        const span = document.createElement("span");
+        span.className = el.className;
+        span.dataset.idx = idx;
+        span.dataset.key = key;
+        span.innerText = key === "nome" ? `${idx + 1}. ${newVal}` : newVal;
+        span.addEventListener("dblclick", () =>
+ editField(span));
+        input.replaceWith(span);
+        saveHabits();
+        updateLog(`Campo '${key}' do hábito ${idx+1} alterado`);
+        updateTimestamp();
+    };
+
+    input.addEventListener("blur", save);
+    input.addEventListener("keypress", (e) =>
+ {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            input.blur();
         }
-        function editDifficulty(badge) {
-            const idx = parseInt(badge.dataset.idx);
-            const current = habits[idx].dif;
-            const select = document.createElement("select");
-            select.className = "difficulty-select";
-            const options = [
-            {val: "facil", label: "FÁCIL"},
-            {val: "medio", label: "MÉDIO"},
-            {val: "dificil", label: "DIFÍCIL"}
-            ];
-            options.forEach(o => {
-                const opt = document.createElement("option");
-                opt.value = o.val;
-                opt.textContent = o.label;
-                if (o.val === current) opt.selected = true;
-                select.appendChild(opt);
-            });
-            badge.replaceWith(select);
-            select.focus();
-            const save = () => {
-                const val = select.value;
-                habits[idx].dif = val;
-                const newBadge = document.createElement("span");
-                newBadge.className = "difficulty-badge " + getBadgeClass(val);
-                newBadge.dataset.idx = idx;
-                newBadge.dataset.key = "dif";
-                newBadge.textContent = val === "facil" ? "FÁCIL" : val === "medio" ? "MÉDIO" : "DIFÍCIL";
-                newBadge.addEventListener("click", () => editDifficulty(newBadge));
-                select.replaceWith(newBadge);
-                saveHabits();
-                updateLog(`Dificuldade do hábito ${idx+1} alterada para: ${val.toUpperCase()}`);
-                updateTimestamp();
-            };
-            select.addEventListener("blur", save);
-            select.addEventListener("change", save);
+    });
+}
+
+function editDifficulty(badge) {
+    const idx = parseInt(badge.dataset.idx);
+    const current = habits[idx].dif;
+    const select = document.createElement("select");
+    select.className = "difficulty-select";
+
+    const options = [
+        {val:"facil", label:"FÁCIL"},
+        {val:"medio", label:"MÉDIO"},
+        {val:"dificil", label:"DIFÍCIL"}
+    ];
+    options.forEach(o =>
+ {
+        const opt = document.createElement("option");
+        opt.value = o.val;
+        opt.textContent = o.label;
+        if (o.val === current) opt.selected = true;
+        select.appendChild(opt);
+    });
+
+    badge.replaceWith(select);
+    select.focus();
+
+    const save = () =>
+ {
+        const val = select.value;
+        habits[idx].dif = val;
+        const newBadge = document.createElement("span");
+        newBadge.className = "difficulty-badge " + getBadgeClass(val);
+        newBadge.dataset.idx = idx;
+        newBadge.textContent = val === "facil" ? "FÁCIL" : val === "medio" ? "MÉDIO" : "DIFÍCIL";
+        newBadge.addEventListener("click", () =>
+ editDifficulty(newBadge));
+        select.replaceWith(newBadge);
+        saveHabits();
+        updateLog(`Dificuldade do hábito ${idx+1} alterada para: ${val.toUpperCase()}`);
+        updateTimestamp();
+    };
+
+    select.addEventListener("blur", save);
+    select.addEventListener("change", save);
+}
+
+function editInfoField(element, field) {
+    const oldValue = element.innerText.trim();
+    const input = document.createElement("input");
+    input.className = "edit-input-info";
+    input.value = oldValue;
+    element.replaceWith(input);
+    input.focus();
+    input.select();
+
+    const save = () =>
+ {
+        const newValue = input.value.trim() || oldValue;
+        headerInfo[field] = newValue;
+        const span = document.createElement("span");
+        span.className = "info-value";
+        span.id = element.id;
+        span.setAttribute("ondblclick", `editInfoField(this, '${field}')`);
+        span.innerText = newValue;
+        input.replaceWith(span);
+        saveHabits();
+        syncPrintHeader();
+        updateLog(`Campo '${field}' alterado para: ${newValue}`);
+        updateTimestamp();
+    };
+
+    input.addEventListener("blur", save);
+    input.addEventListener("keypress", (e) =>
+ {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            input.blur();
         }
-        function addHabits() {
-            const count = parseInt(document.getElementById("addCount").value) || 1;
-            for (let i = 0; i < count; i++) {
-                habits.push({
-                    nome: "Novo hábito",
-                    dif: "medio",
-                    gatilho: "Definir gatilho",
-                    desejo: "Definir desejo",
-                    acao: "Definir ação",
-                    recompensa: "Definir recompensa",
-                    consequencia: "Definir consequência"
+    });
+}
+
+function addHabits() {
+    const count = parseInt(document.getElementById("addCount").value) || 1;
+    for (let i = 0; i < count; i++) {
+        habits.push({
+            nome:"Novo hábito",
+            dif:"medio",
+            gatilho:"Definir gatilho",
+            desejo:"Definir desejo",
+            acao:"Definir ação",
+            recompensa:"Definir recompensa",
+            consequencia:"Definir consequência"
+        });
+    }
+    saveHabits();
+    render();
+    updateLog(`${count} hábito(s) adicionado(s)`);
+}
+
+function deleteHabit(idx) {
+    if (confirm(`Confirma exclusão do hábito ${idx + 1}?`)) {
+        habits.splice(idx, 1);
+        saveHabits();
+        render();
+        updateLog(`Hábito ${idx + 1} excluído`);
+    }
+}
+
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!confirm("Importar substituirá TODOS os dados. Continuar?")) {
+        event.target.value = "";
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) =>
+ {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.metadata && data.habits) {
+                headerInfo = data.metadata;
+                document.getElementById('infoOperador').innerText = headerInfo.operador;
+                document.getElementById('infoPeriodo').innerText = headerInfo.periodo;
+                document.getElementById('infoObjetivo').innerText = headerInfo.objetivo;
+                document.getElementById('infoFrase').innerText = headerInfo.frase;
+                habits.length = 0;
+                data.habits.forEach(h =>
+ {
+                    if (h.nome) h.nome = h.nome.replace(/^\d+\.\s*/, "");
+                    habits.push(h);
                 });
+            } else if (Array.isArray(data)) {
+                habits.length = 0;
+                data.forEach(h =>
+ {
+                    if (h.nome) h.nome = h.nome.replace(/^\d+\.\s*/, "");
+                    habits.push(h);
+                });
+            } else {
+                alert("Formato JSON não reconhecido.");
+                return;
             }
             saveHabits();
             render();
-            updateLog(`${count} hábito(s) adicionado(s)`);
+            syncPrintHeader();
+            updateLog("Importação concluída");
+        } catch (err) {
+            alert("Erro ao ler JSON: " + err.message);
         }
-        function deleteHabit(idx) {
-            if (confirm(`Confirma exclusão do hábito ${idx + 1}?`)) {
-                const habitName = habits[idx].nome;
-                habits.splice(idx, 1);
-                saveHabits();
-                render();
-                updateLog(`Hábito "${habitName}" excluído`);
-            }
-        }
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            if (!confirm("Importar este arquivo substituirá TODOS os dados atuais. Confirma?")) {
-                event.target.value = "";
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (!Array.isArray(data)) {
-                        alert("Arquivo inválido: JSON deve conter uma lista de hábitos.");
-                        return;
-                    }
-                    data.forEach(h => {
-                        if (h.nome) {
-                            h.nome = h.nome.replace(/^\d+\.\s*/, "");
-                        }
-                    });
-                    habits.length = 0;
-                    habits.push(...data);
-                    saveHabits();
-                    render();
-                    updateLog(`Arquivo importado com sucesso (${data.length} hábitos)`);
-                } catch (err) {
-                    alert("Erro ao ler arquivo JSON: " + err.message);
-                }
-                event.target.value = "";
-            };
-            reader.readAsText(file);
-        }
-        function saveHabits() {
-            localStorage.setItem("habitStack_v32", JSON.stringify(habits));
-        }
-        function updateLog(entry) {
-            const log = document.getElementById("logContainer");
-            const item = document.createElement("div");
-            item.className = "log-item";
-            item.textContent = `[${new Date().toLocaleTimeString()}] ${entry}`;
-            log.insertBefore(item, log.firstChild);
-        }
-        function toggleLog() {
-            const log = document.getElementById("logContainer");
-            log.style.display = log.style.display === "none" ? "block" : "none";
-        }
-        function updateTimestamp() {
-            document.getElementById("lastUpdated").textContent = new Date().toLocaleString();
-        }
-        function exportData() {
-            const json = JSON.stringify(habits, null, 2);
-            const blob = new Blob([json], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "habitStack_3.2.json";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            const txt = habits.map((h, i) => `${i+1}. ${h.nome}\t${h.gatilho}\t${h.desejo}\t${h.acao}\t${h.recompensa}\t${h.consequencia}`).join("\n");
-            const blobTxt = new Blob([txt], { type: "text/plain" });
-            const urlTxt = URL.createObjectURL(blobTxt);
-            const aTxt = document.createElement("a");
-            aTxt.href = urlTxt;
-            aTxt.download = "habitStack_3.2.txt";
-            document.body.appendChild(aTxt);
-            aTxt.click();
-            document.body.removeChild(aTxt);
-            URL.revokeObjectURL(urlTxt);
-            updateLog("Dados exportados em JSON e TXT");
-        }
-        document.addEventListener("click", (e) => {
-            if (e.target.classList.contains("editable-header")) {
-                const span = e.target;
-                const field = span.dataset.field;
-                const oldVal = span.innerText;
-                const input = document.createElement("input");
-                input.className = "edit-input";
-                input.style.width = "auto";
-                input.style.minWidth = "60px";
-                input.value = oldVal;
-                span.replaceWith(input);
-                input.focus();
-                input.select();
-                input.addEventListener("blur", () => {
-                    const newVal = input.value.trim() || oldVal;
-                    const newSpan = document.createElement("span");
-                    newSpan.className = "editable-header";
-                    newSpan.dataset.field = field;
-                    newSpan.innerText = newVal;
-                    input.replaceWith(newSpan);
-                    updateLog(`Header '${field}' alterado para: ${newVal}`);
-                    updateTimestamp();
-                });
-                input.addEventListener("keypress", ev => {
-                    if (ev.key === "Enter") input.blur();
-                });
-            }
-        });
-        const saved = localStorage.getItem("habitStack_v32");
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                habits.length = 0;
-                habits.push(...data);
-            } catch(e) {}
-        }
-        render();
-    </script>
+        event.target.value = "";
+    };
+    reader.readAsText(file);
+}
+
+function exportData() {
+    const exportObj = { metadata: headerInfo, habits: habits };
+    const json = JSON.stringify(exportObj, null, 2);
+    const blob = new Blob([json], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "habitStack_3.3.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    updateLog("Exportado JSON");
+}
+
+function saveHabits() {
+    localStorage.setItem("habitStack_v33", JSON.stringify(habits));
+    localStorage.setItem("habitStack_v33_header", JSON.stringify(headerInfo));
+}
+
+function loadHabits() {
+    const saved = localStorage.getItem("habitStack_v33");
+    const savedHeader = localStorage.getItem("habitStack_v33_header");
+    if (saved) {
+        try { habits.length = 0; habits.push(...JSON.parse(saved)); } catch(e) {}
+    }
+    if (savedHeader) {
+        try {
+            headerInfo = JSON.parse(savedHeader);
+            document.getElementById('infoOperador').innerText = headerInfo.operador;
+            document.getElementById('infoPeriodo').innerText = headerInfo.periodo;
+            document.getElementById('infoObjetivo').innerText = headerInfo.objetivo;
+            document.getElementById('infoFrase').innerText = headerInfo.frase;
+        } catch(e) {}
+    }
+    syncPrintHeader();
+}
+
+function updateLog(msg) {
+    const log = document.getElementById("logContainer");
+    const item = document.createElement("div");
+    item.className = "log-item";
+    item.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    log.insertBefore(item, log.firstChild);
+}
+
+function toggleLog() {
+    const log = document.getElementById("logContainer");
+    log.style.display = log.style.display === "none" ? "block" : "none";
+}
+
+function updateTimestamp() {
+    document.getElementById("lastUpdated").textContent = new Date().toLocaleString();
+}
+
+loadHabits();
+render();
+</script>
 </body>
 </html>

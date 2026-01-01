@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Gerador de Hábitos - Master 3.1 (Tracker)</title>
+<title>Habit Tracker Master 3.2</title>
 <style>
     * { box-sizing: border-box; }
     body {
@@ -133,16 +133,42 @@
     }
     .btn-primary:hover { background: #333; }
 
-    .btn-secondary {
-        padding: 8px 14px;
-        border: 1px solid #000;
-        background: #f0f0f0;
-        cursor: pointer;
-        font-size: 12px;
-        margin-left: 8px;
+    .import-section {
+        margin-top: 20px;
+        padding: 15px;
+        border: 2px dashed #333;
+        background: #f9f9f9;
+        text-align: center;
     }
-    .btn-secondary:hover {
-        background: #ddd;
+
+    .import-section label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 10px;
+        font-size: 12px;
+        letter-spacing: 1px;
+    }
+
+    .btn-import {
+        padding: 12px 24px;
+        border: 2px solid #1565c0;
+        background: #1565c0;
+        color: #fff;
+        cursor: pointer;
+        font-size: 13px;
+        letter-spacing: 1px;
+        font-weight: bold;
+        font-family: 'Courier New', monospace;
+        transition: all 0.2s ease;
+    }
+
+    .btn-import:hover {
+        background: #0d47a1;
+        border-color: #0d47a1;
+    }
+
+    .btn-import:active {
+        transform: scale(0.98);
     }
 
     .output {
@@ -151,7 +177,6 @@
         border: 2px solid #000;
         display: none;
     }
-    /* ===== CONTEÚDO GERADO ===== */
     #outputContent {
         font-family: 'Courier New', monospace;
     }
@@ -236,46 +261,7 @@
         min-width: 150px;
         flex-grow: 1;
     }
-    .import-section {
-    margin-top: 20px;
-    padding: 15px;
-    border: 2px dashed #333;
-    background: #f9f9f9;
-    text-align: center;
-    }
 
-    .import-section label {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 10px;
-        font-size: 12px;
-        letter-spacing: 1px;
-    }
-
-    .btn-import {
-        padding: 12px 24px;
-        border: 2px solid #333;
-        background: #333;
-        color: #fff;
-        cursor: pointer;
-        font-size: 13px;
-        letter-spacing: 1px;
-        font-weight: bold;
-        font-family: 'Courier New', monospace;
-        transition: all 0.2s ease;
-    }
-
-    .btn-import:hover {
-        background: #555;
-        border-color: #555;
-    }
-
-    .btn-import:active {
-        transform: scale(0.98);
-    }
-
-
-    /* ===== IMPRESSÃO ===== */
     @page {
         size: A4 landscape;
         margin: 10mm;
@@ -319,12 +305,12 @@
 </head>
 <body>
 <div class="container">
-    <h1>GERADOR DE HÁBITOS - MASTER 3.1 (TRACKER)</h1>
+    <h1>HABIT TRACKER MASTER 3.2</h1>
 
     <div class="section-title">INFORMAÇÕES DO RELATÓRIO</div>
     <div class="habit-group">
         <div class="form-field">
-            <label>Nome:</label>
+            <label>Nome/Operador:</label>
             <input id="userName" type="text" placeholder="Seu nome">
         </div>
         <div class="form-field">
@@ -357,14 +343,7 @@
             <label>Dias: </label>
             <input id="days" type="number" value="30" min="7" max="60" style="border:none; border-bottom:1px solid #000;">
         </div>
-        <div style="margin-bottom:10px;">
-            <label>Formato: </label>
-            <select id="format" style="border:none; border-bottom:1px solid #000;">
-                <option value="tracker">Habit Tracker</option>
-            </select>
-        </div>
 
-        <!-- IMPORTAR JSON VINDO DO HABIT STACK -->
         <div class="import-section">
             <label>📥 IMPORTAR HÁBITOS DO HABIT STACK</label>
             <input type="file" id="stackJsonInput" accept="application/json" style="display:none" onchange="importFromStackJson(event)">
@@ -372,7 +351,6 @@
                 SELECIONAR ARQUIVO JSON
             </button>
         </div>
-
     </div>
 
     <button class="btn-primary" onclick="generate()">GERAR HABIT TRACKER</button>
@@ -384,7 +362,6 @@
 </div>
 
 <script>
-// LISTA BASE
 let habits = [
     { text: "06:30 - Cardio Z2 (30 min)", priority: false },
     { text: "Café da manhã", priority: false },
@@ -405,9 +382,8 @@ let habits = [
 let customHabits = [];
 let dragSrcIndex = null;
 
-// CARREGAR DO LOCALSTORAGE
 function loadFromStorage() {
-    const saved = localStorage.getItem('habitData_tracker_v31');
+    const saved = localStorage.getItem('habitData_tracker_v32');
     if (saved) {
         const data = JSON.parse(saved);
         if (data.habits) habits = data.habits;
@@ -420,7 +396,39 @@ function loadFromStorage() {
     }
 }
 
-// SALVAR NO LOCALSTORAGE
+function checkTransferData() {
+    const transfer = localStorage.getItem('habitData_fromStack');
+    if (transfer) {
+        try {
+            const data = JSON.parse(transfer);
+
+            if (data.metadata) {
+                if (data.metadata.operador) document.getElementById('userName').value = data.metadata.operador;
+                if (data.metadata.periodo) document.getElementById('userMonth').value = data.metadata.periodo;
+                if (data.metadata.objetivo) document.getElementById('userObjective').value = data.metadata.objetivo;
+                if (data.metadata.frase) document.getElementById('userPhrase').value = data.metadata.frase;
+            }
+
+            if (data.habits && Array.isArray(data.habits)) {
+                habits.length = 0;
+                habits.push(...data.habits.map(h =>
+ ({
+                    text: (h.nome || h.text || "").toString(),
+                    priority: false
+                })));
+                render();
+                saveToStorage();
+            }
+
+            localStorage.removeItem('habitData_fromStack');
+            alert("✅ Hábitos carregados do Stack com sucesso!");
+
+        } catch(e) {
+            console.error("Erro ao carregar dados do Stack:", e);
+        }
+    }
+}
+
 function saveToStorage() {
     const data = {
         habits,
@@ -432,14 +440,14 @@ function saveToStorage() {
         days: document.getElementById('days').value,
         format: 'tracker'
     };
-    localStorage.setItem('habitData_tracker_v31', JSON.stringify(data));
+    localStorage.setItem('habitData_tracker_v32', JSON.stringify(data));
 }
 
-// RENDERIZAÇÃO
 function render() {
     const container = document.getElementById("nonnegotiableHabits");
     container.innerHTML = "";
-    habits.forEach((habit, index) => {
+    habits.forEach((habit, index) =>
+ {
         let item = document.createElement("div");
         item.className = "habit-item";
         item.draggable = true;
@@ -464,14 +472,12 @@ function render() {
     saveToStorage();
 }
 
-// PRIORIDADE
 function togglePriority(i) {
     habits[i].priority = !habits[i].priority;
     saveToStorage();
     render();
 }
 
-// DRAG & DROP
 function dragStart(e) {
     dragSrcIndex = this.dataset.index;
     this.classList.add("dragging");
@@ -487,7 +493,6 @@ function dragEnd() {
     this.classList.remove("dragging");
 }
 
-// EDIÇÃO INLINE (DUPLO CLIQUE) - IGUAL AO STACK
 function editHabitText(index, element) {
     const oldValue = element.innerText.trim();
 
@@ -500,7 +505,8 @@ function editHabitText(index, element) {
     input.focus();
     input.select();
 
-    const save = () => {
+    const save = () =>
+ {
         const newValue = input.value.trim() || oldValue;
         habits[index].text = newValue;
 
@@ -515,7 +521,8 @@ function editHabitText(index, element) {
     };
 
     input.addEventListener("blur", save);
-    input.addEventListener("keypress", (e) => {
+    input.addEventListener("keypress", (e) =>
+ {
         if (e.key === "Enter") {
             e.preventDefault();
             save();
@@ -523,7 +530,6 @@ function editHabitText(index, element) {
     });
 }
 
-// CUSTOM HABITS
 function addCustomHabit() {
     const val = document.getElementById("customHabit").value.trim();
     if (!val) return;
@@ -533,7 +539,8 @@ function addCustomHabit() {
 }
 function renderCustom() {
     const container = document.getElementById("customHabits");
-    container.innerHTML = customHabits.map((h, i) => `
+    container.innerHTML = customHabits.map((h, i) =>
+ `
         <div class="habit-item optional">
             <label class="habit-label">${h.text}</label>
             <button onclick="removeCustom(${i})" style="padding:4px 8px; border:1px solid #000; background:#fff; cursor:pointer; margin-left:10px;">X</button>
@@ -546,7 +553,6 @@ function removeCustom(i) {
     renderCustom();
 }
 
-// IMPORTAR JSON VINDO DO HABIT STACK
 function importFromStackJson(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -555,17 +561,42 @@ function importFromStackJson(event) {
     reader.onload = function(e) {
         try {
             const data = JSON.parse(e.target.result);
-            if (!Array.isArray(data)) {
-                alert("JSON inválido: deve ser uma lista de hábitos.");
+
+            if (data.metadata && data.habits) {
+                if (data.metadata.operador) {
+                    document.getElementById('userName').value = data.metadata.operador;
+                }
+                if (data.metadata.periodo) {
+                    document.getElementById('userMonth').value = data.metadata.periodo;
+                }
+                if (data.metadata.objetivo) {
+                    document.getElementById('userObjective').value = data.metadata.objetivo;
+                }
+                if (data.metadata.frase) {
+                    document.getElementById('userPhrase').value = data.metadata.frase;
+                }
+
+                habits = data.habits.map(h =>
+ ({
+                    text: (h.nome || h.text || "").toString(),
+                    priority: false
+                }));
+
+            } else if (Array.isArray(data)) {
+                habits = data.map(h =>
+ ({
+                    text: (h.nome || h.text || "").toString(),
+                    priority: false
+                }));
+            } else {
+                alert("JSON inválido: formato não reconhecido.");
                 return;
             }
-            // Converte do formato do STACK para o formato do TRACKER
-            habits = data.map(h => ({
-                text: (h.nome || h.text || "").toString(),
-                priority: false
-            }));
+
             render();
-            alert("Hábitos carregados a partir do Habit Stack.");
+            saveToStorage();
+            alert("Hábitos e informações carregados do Habit Stack!");
+
         } catch (err) {
             alert("Erro ao ler arquivo JSON: " + err.message);
         } finally {
@@ -575,7 +606,6 @@ function importFromStackJson(event) {
     reader.readAsText(file);
 }
 
-// GERAR APENAS HABIT TRACKER
 function generate() {
     const selected = habits.concat(customHabits);
     const days = Number(document.getElementById("days").value);
@@ -594,14 +624,14 @@ function generate() {
     `;
 
     let html = "";
-    // TRACKER ÚNICO
     html += `<div class="tracker-page">`;
     html += `<div class="title-row">`;
     html += `<span class="tracker-title">HABIT TRACKER - ${days} DIAS</span>`;
     html += `<span class="page-info">OPERADOR: ${userName}  |  PERÍODO: ${userMonth}  |  OBJETIVO: ${userObjective}</span>`;
     html += `</div>`;
 
-    selected.forEach((habit, idx) => {
+    selected.forEach((habit, idx) =>
+ {
         const isOptional = idx >= habits.length;
         const isPriority = habit.priority;
         const typeField = isPriority ? '<b>!!!</b>' : (isOptional ? '<b>###</b>' : '');
@@ -625,10 +655,10 @@ function generate() {
     saveToStorage();
 }
 
-// INICIALIZAR
 loadFromStorage();
 render();
 renderCustom();
+checkTransferData();
 </script>
 </body>
 </html>
