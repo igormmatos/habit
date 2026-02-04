@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Habit App</title>
+    <meta name="description" content="Habit app placeholder." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="page app-shell">
+      <header class="site-header">
+        <div class="logo">Habit</div>
+        <nav class="nav">
+          <a class="nav-link" href="/">Home</a>
+          <a class="nav-link" href="/legacy.html">Legacy</a>
+        </nav>
+      </header>
+
+      <main class="app-main">
+        <section class="app-header">
+          <div>
+            <p class="eyebrow">Local-first MVP</p>
+            <h1>Habit</h1>
+            <p class="hero-subtitle">Crie, acompanhe e marque seus hábitos.</p>
+          </div>
+        </section>
+
+        <section class="app-section">
+          <div class="section-title">
+            <h2>Novo hábito</h2>
+            <p>Escolha um nome e uma cor para identificar o hábito.</p>
+          </div>
+          <form class="habit-form" id="habitForm">
+            <div class="field">
+              <label for="habitName">Nome do hábito</label>
+              <input
+                id="habitName"
+                name="habitName"
+                type="text"
+                maxlength="40"
+                placeholder="Ex.: Ler 20 páginas"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="habitColor">Cor</label>
+              <input id="habitColor" name="habitColor" type="color" />
+            </div>
+            <button class="btn btn-primary" type="submit">Adicionar</button>
+            <p class="form-error" id="formError" role="alert"></p>
+          </form>
+        </section>
+
+        <section class="app-section">
+          <div class="section-title">
+            <h2>Seus hábitos</h2>
+            <p>Marque o que foi feito hoje.</p>
+          </div>
+          <div class="habit-list" id="habitList" aria-live="polite"></div>
+          <p class="empty-state" id="emptyState">
+            Nenhum hábito ainda. Crie o primeiro no formulário acima.
+          </p>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <span>Habit App • Preview build</span>
+        <span>© <span data-year></span></span>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>
