@@ -2,6 +2,7 @@ import "./style.css";
 
 const STORAGE_KEY = "habit:v1";
 const DEFAULT_COLOR = "#4f46e5";
+const STORAGE_SCHEMA = "habit:v1";
 const MONTH_NAMES = [
   "Janeiro",
   "Fevereiro",
@@ -24,6 +25,12 @@ const elements = {
   list: document.getElementById("habitList"),
   emptyState: document.getElementById("emptyState"),
   error: document.getElementById("formError"),
+  exportBtn: document.getElementById("exportBtn"),
+  importBtn: document.getElementById("importBtn"),
+  importFile: document.getElementById("importFile"),
+  demoBtn: document.getElementById("demoBtn"),
+  clearBtn: document.getElementById("clearBtn"),
+  status: document.getElementById("statusMessage"),
   year: document.querySelector("[data-year]"),
 };
 
@@ -154,6 +161,90 @@ function validateAndNormalizeState(raw) {
   }
 
   return normalized;
+}
+
+function validateImportPayload(payload) {
+  if (!payload || typeof payload !== "object") {
+    return { ok: false, message: "Arquivo invalido." };
+  }
+  if (payload.schema !== STORAGE_SCHEMA) {
+    return { ok: false, message: "Schema invalido." };
+  }
+  const state = payload.state;
+  if (!state || typeof state !== "object") {
+    return { ok: false, message: "Estado ausente." };
+  }
+  if (state.version !== 1) {
+    return { ok: false, message: "Versao invalida." };
+  }
+  if (!Array.isArray(state.habits)) {
+    return { ok: false, message: "Habitos invalidos." };
+  }
+  if (!state.checkins || typeof state.checkins !== "object") {
+    return { ok: false, message: "Check-ins invalidos." };
+  }
+  return { ok: true, message: "" };
+}
+
+function normalizeImportedState(state) {
+  const seen = new Set();
+  const habits = [];
+
+  state.habits.forEach((habit) => {
+    if (!habit || typeof habit !== "object") {
+      return;
+    }
+    if (typeof habit.id !== "string" || !habit.id.trim()) {
+      return;
+    }
+    if (seen.has(habit.id)) {
+      return;
+    }
+    const name = sanitizeName(habit.name);
+    if (!name) {
+      return;
+    }
+    habits.push({
+      id: habit.id.trim(),
+      name,
+      color: normalizeColor(habit.color),
+      createdAt:
+        typeof habit.createdAt === "string" && habit.createdAt
+          ? habit.createdAt
+          : new Date().toISOString(),
+      archivedAt:
+        typeof habit.archivedAt === "string" && habit.archivedAt
+          ? habit.archivedAt
+          : undefined,
+    });
+    seen.add(habit.id);
+  });
+
+  const habitIds = new Set(habits.map((habit) => habit.id));
+  const checkins = {};
+  Object.entries(state.checkins).forEach(([habitId, dates]) => {
+    if (!habitIds.has(habitId)) {
+      return;
+    }
+    if (!dates || typeof dates !== "object") {
+      return;
+    }
+    const normalizedDates = {};
+    Object.entries(dates).forEach(([dateKey, value]) => {
+      if (value === true && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+        normalizedDates[dateKey] = true;
+      }
+    });
+    if (Object.keys(normalizedDates).length) {
+      checkins[habitId] = normalizedDates;
+    }
+  });
+
+  return {
+    version: 1,
+    habits,
+    checkins,
+  };
 }
 
 function migrate(raw) {
@@ -404,6 +495,95 @@ function setError(message) {
   elements.error.style.visibility = message ? "visible" : "hidden";
 }
 
+function setStatus(message, tone = "info") {
+  elements.status.textContent = message;
+  elements.status.dataset.tone = tone;
+}
+
+function clearStatus() {
+  setStatus("");
+  elements.status.removeAttribute("data-tone");
+}
+
+function confirmReplace() {
+  return window.confirm("Isso substituira seus dados atuais. Continuar?");
+}
+
+function buildExportPayload(state) {
+  return {
+    app: "habit",
+    schema: STORAGE_SCHEMA,
+    exportedAt: new Date().toISOString(),
+    state,
+  };
+}
+
+function downloadJson(payload) {
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}${String(now.getDate()).padStart(2, "0")}-${String(
+    now.getHours()
+  ).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+  const filename = `habit-export-${stamp}.json`;
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function buildDemoState() {
+  const todayKey = getTodayKey();
+  const habits = [
+    { name: "Ler 20 paginas", color: "#4f46e5" },
+    { name: "Treino", color: "#f97316" },
+    { name: "Meditar 5 min", color: "#10b981" },
+  ].map((habit) => ({
+    id: generateId(),
+    name: habit.name,
+    color: habit.color,
+    createdAt: new Date().toISOString(),
+  }));
+
+  const patterns = [10, 6, 12];
+  const checkins = {};
+
+  habits.forEach((habit, idx) => {
+    const total = patterns[idx];
+    const dates = new Set();
+    dates.add(todayKey);
+    for (let i = 1; dates.size < total && i < 14; i += 1) {
+      if (idx === 0 && i % 3 !== 0) {
+        dates.add(addDays(todayKey, -i));
+      }
+      if (idx === 1 && i % 2 === 0) {
+        dates.add(addDays(todayKey, -i));
+      }
+      if (idx === 2 && i % 4 !== 0) {
+        dates.add(addDays(todayKey, -i));
+      }
+    }
+    checkins[habit.id] = {};
+    Array.from(dates).forEach((dateKey) => {
+      checkins[habit.id][dateKey] = true;
+    });
+  });
+
+  return {
+    version: 1,
+    habits,
+    checkins,
+  };
+}
+
 let state = loadState();
 
 elements.colorInput.value = DEFAULT_COLOR;
@@ -426,6 +606,70 @@ elements.form.addEventListener("submit", (event) => {
   setError("");
   elements.nameInput.value = "";
   elements.nameInput.focus();
+});
+
+elements.exportBtn.addEventListener("click", () => {
+  clearStatus();
+  const payload = buildExportPayload(loadState());
+  downloadJson(payload);
+  setStatus("Exportado com sucesso.", "success");
+});
+
+elements.importBtn.addEventListener("click", () => {
+  elements.importFile.click();
+});
+
+elements.importFile.addEventListener("change", async (event) => {
+  clearStatus();
+  const file = event.target.files?.[0];
+  if (!file) {
+    return;
+  }
+  try {
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    const validation = validateImportPayload(payload);
+    if (!validation.ok) {
+      setStatus(validation.message, "error");
+      return;
+    }
+    if (!confirmReplace()) {
+      setStatus("Importacao cancelada.", "info");
+      return;
+    }
+    const normalized = normalizeImportedState(payload.state);
+    state = normalized;
+    saveState(state);
+    render(state);
+    setStatus("Importado com sucesso.", "success");
+  } catch {
+    setStatus("Falha ao importar arquivo.", "error");
+  } finally {
+    event.target.value = "";
+  }
+});
+
+elements.demoBtn.addEventListener("click", () => {
+  clearStatus();
+  if (!confirmReplace()) {
+    setStatus("Carregamento cancelado.", "info");
+    return;
+  }
+  state = buildDemoState();
+  saveState(state);
+  render(state);
+  setStatus("Exemplo carregado com sucesso.", "success");
+});
+
+elements.clearBtn.addEventListener("click", () => {
+  clearStatus();
+  if (!window.confirm("Isso removera todos os dados salvos. Continuar?")) {
+    return;
+  }
+  localStorage.removeItem(STORAGE_KEY);
+  state = { ...initialState };
+  render(state);
+  setStatus("Dados limpos.", "success");
 });
 
 elements.list.addEventListener("click", (event) => {

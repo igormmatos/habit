@@ -9,6 +9,7 @@ Coming soon. For now, run locally with Vite.
 - Landing page with app preview
 - Dedicated App placeholder screen
 - Legacy archive page linking the original HTML builds
+- Export/import JSON data + demo seed data
 
 ## Roadmap (Short)
 1. Habit creation + local-first storage
@@ -49,3 +50,10 @@ The original standalone HTML versions live in `legacy/` and are preserved withou
 - `legacy/habit_tracker_master_3.0.html`
 
 If the build server does not serve the `legacy/` folder, open these files directly from the repository.
+
+## Data Import/Export
+In the app view (`/app.html`) you can:
+- Export a JSON snapshot of your current data.
+- Import a JSON snapshot (replaces existing data after confirmation).
+- Load demo data (3 habits + 14 days of check-ins).
+- Clear all saved data.

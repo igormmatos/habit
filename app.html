@@ -67,6 +67,31 @@
             Nenhum hábito ainda. Crie o primeiro no formulário acima.
           </p>
         </section>
+
+        <section class="app-section">
+          <div class="section-title">
+            <h2>Dados</h2>
+            <p>Exporte, importe ou carregue exemplos rapidamente.</p>
+          </div>
+          <div class="data-actions">
+            <button class="btn btn-ghost" type="button" id="exportBtn">
+              Exportar JSON
+            </button>
+            <div class="file-field">
+              <input id="importFile" type="file" accept=".json" />
+              <button class="btn btn-ghost" type="button" id="importBtn">
+                Importar JSON
+              </button>
+            </div>
+            <button class="btn btn-ghost" type="button" id="demoBtn">
+              Carregar exemplo
+            </button>
+            <button class="btn btn-ghost" type="button" id="clearBtn">
+              Limpar dados
+            </button>
+          </div>
+          <p class="status-message" id="statusMessage" role="status"></p>
+        </section>
       </main>
 
       <footer class="site-footer">

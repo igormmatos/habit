@@ -454,6 +454,37 @@ input[type="color"] {
   font-size: 14px;
 }
 
+.data-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.file-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-field input[type="file"] {
+  display: none;
+}
+
+.status-message {
+  margin: 0;
+  font-size: 13px;
+  min-height: 18px;
+  color: var(--ink-soft);
+}
+
+.status-message[data-tone="success"] {
+  color: #047857;
+}
+
+.status-message[data-tone="error"] {
+  color: #b91c1c;
+}
+
 .legacy-main {
   display: flex;
   flex-direction: column;
