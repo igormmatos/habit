@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Habit Print Tracker</title>
+    <meta name="description" content="Habit Print Tracker" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="page print-page">
+      <header class="site-header">
+        <div class="logo">Habit</div>
+        <nav class="nav">
+          <a class="nav-link" href="/">Home</a>
+          <a class="nav-link" href="/stack.html">Stack</a>
+          <a class="nav-link" href="/tracker.html">Print</a>
+          <a class="nav-link" href="/digital.html">Digital</a>
+          <a class="nav-link" href="/legacy.html">Legacy</a>
+        </nav>
+      </header>
+
+      <main class="container">
+        <div class="page-title">
+          <p class="eyebrow">Print Tracker</p>
+          <h1>Print Tracker</h1>
+          <p class="muted">
+            Configure o tracker antes de gerar o layout para impressão.
+          </p>
+        </div>
+
+        <section class="tracker-block">
+          <section class="card stack-section print-hidden">
+            <h2>Configuração</h2>
+            <form class="stack-form" id="trackerMetaForm">
+              <label class="field">
+                Operador
+                <input
+                  class="input"
+                  id="operator"
+                  type="text"
+                  maxlength="60"
+                  placeholder="Seu nome"
+                />
+              </label>
+              <label class="field">
+                Período
+                <input
+                  class="input"
+                  id="period"
+                  type="text"
+                  maxlength="7"
+                  inputmode="numeric"
+                  pattern="\\d{2}/\\d{4}"
+                  placeholder="MM/AAAA"
+                />
+              </label>
+              <label class="field">
+                Objetivo
+                <input
+                  class="input"
+                  id="objective"
+                  type="text"
+                  maxlength="120"
+                  placeholder="Seu objetivo"
+                />
+              </label>
+              <label class="field">
+                Frase
+                <textarea
+                  class="textarea"
+                  id="phrase"
+                  rows="2"
+                  placeholder="Sua frase motivacional"
+                ></textarea>
+              </label>
+              <label class="field">
+                Número de dias
+                <input
+                  class="input input-count"
+                  id="days"
+                  type="number"
+                  min="7"
+                  max="31"
+                  value="30"
+                  placeholder="30"
+                />
+              </label>
+              <label class="field">
+                Data de início
+                <input class="input" id="startDate" type="date" />
+              </label>
+            </form>
+          </section>
+
+          <section class="card stack-section print-hidden">
+            <div class="stack-header">
+              <div>
+                <h2>Hábitos Principais</h2>
+                <p class="muted">Marque prioridade (!) e reordene.</p>
+              </div>
+            </div>
+            <div class="stack-list" id="habitList"></div>
+            <p class="muted" id="trackerEmpty">
+              Nenhum hábito carregado ainda.
+            </p>
+          </section>
+
+          <section class="card stack-section print-hidden">
+            <div class="stack-header">
+              <div>
+                <h2>Hábitos Opcionais (###)</h2>
+                <p class="muted">Adicione hábitos extras para o tracker.</p>
+              </div>
+              <div class="stack-add">
+                <label class="sr-only" for="optionalInput">
+                  Adicionar hábito opcional
+                </label>
+                <input
+                  class="input"
+                  id="optionalInput"
+                  type="text"
+                  maxlength="60"
+                  placeholder="Ex: Alongamento"
+                />
+                <button class="btn btn-secondary" id="addOptionalBtn" type="button">
+                  Adicionar
+                </button>
+              </div>
+            </div>
+            <div class="stack-list" id="optionalList"></div>
+          </section>
+        </section>
+
+        <section class="tracker-block">
+          <section class="card stack-section" id="previewSection">
+            <h2>Preview</h2>
+            <p class="preview-hint">Arraste para o lado →</p>
+            <div id="preview" class="preview"></div>
+          </section>
+        </section>
+
+        <section class="tracker-block">
+          <section class="card stack-section print-hidden">
+            <h2>Saída</h2>
+            <div class="stack-actions">
+              <button class="btn btn-secondary" id="importBtn" type="button">
+                Importar
+              </button>
+              <label class="sr-only" for="importFile">
+                Importar arquivo JSON
+              </label>
+              <input id="importFile" type="file" accept=".json" />
+              <button class="btn btn-secondary" id="clearBtn" type="button">
+                Limpar dados do tracker
+              </button>
+              <button
+                class="btn btn-primary"
+                id="generatePreviewBtn"
+                type="button"
+              >
+                Gerar preview
+              </button>
+              <button
+                class="btn btn-secondary"
+                id="exportPdfBtn"
+                type="button"
+                disabled
+              >
+                Exportar PDF
+              </button>
+            </div>
+            <p
+              class="status-message"
+              id="status"
+              role="status"
+              aria-live="polite"
+            ></p>
+          </section>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <span>
+          Habit - Por
+          <a href="https://igormmatos.com.br" rel="noopener">Igor Matos</a>
+        </span>
+        <span>© <span data-year></span></span>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

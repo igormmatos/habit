@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Habit Legacy</title>
-    <meta name="description" content="Legacy Habit HTML builds." />
+    <title>Habit Digital Tracker</title>
+    <meta name="description" content="Habit Digital Tracker" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,7 +12,7 @@
       rel="stylesheet"
     />
   </head>
-  <body>
+  <body data-page="digital">
     <div class="page">
       <header class="site-header">
         <div class="logo">Habit</div>
@@ -27,37 +27,35 @@
 
       <main class="container">
         <div class="page-title">
-          <p class="eyebrow">Legacy Builds</p>
-          <h1>Habit 3.x HTML</h1>
-          <p class="muted">
-            These are the original standalone HTML files, preserved without
-            changes. If your build does not serve the <code>/legacy</code>
-            folder, open them directly from the repository.
+          <p class="eyebrow">Digital Tracker</p>
+          <h1>Digital Tracker</h1>
+          <p class="digital-meta" id="todayMeta">
+            Hoje · <span id="todayLabel">--/--</span>
           </p>
+          <p class="digital-summary" id="progressSummary">Você já fez 0 de 0 hábitos.</p>
+          <p class="muted">Um toque para fechar o dia.</p>
         </div>
 
-        <section class="grid">
-          <article class="card">
-            <h3>Arquivos Legacy</h3>
-            <div class="legacy-list">
-              <a
-                class="legacy-link"
-                href="/legacy/habit_stack_master_3.0.html"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Habit Stack Master 3.0
-              </a>
-              <a
-                class="legacy-link"
-                href="/legacy/habit_tracker_master_3.0.html"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Habit Tracker Master 3.0
-              </a>
-            </div>
-          </article>
+        <section class="card digital-progress">
+          <div class="section-title">
+            <h2>Progresso de hoje</h2>
+            <p class="progress-text"><strong><span id="doneCount">0</span> de <span id="totalCount">0</span> hábitos concluídos</strong></p>
+          </div>
+          <div class="progress-bar" aria-hidden="true">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <h2>Hoje</h2>
+            <p>Marque os hábitos do dia com um toque.</p>
+          </div>
+          <div class="digital-list" id="habitList"></div>
+          <p class="digital-complete" id="dayComplete" hidden>
+            Dia concluído. Bom descanso.
+          </p>
+          <p class="status-message" id="status" role="status" aria-live="polite"></p>
         </section>
       </main>
 

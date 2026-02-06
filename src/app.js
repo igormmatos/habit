@@ -1,4 +1,5 @@
 import "./style.css";
+import "./nav.js";
 
 const STORAGE_KEY = "habit:v1";
 const DEFAULT_COLOR = "#4f46e5";

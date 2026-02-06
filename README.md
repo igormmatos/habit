@@ -57,3 +57,9 @@ In the app view (`/app.html`) you can:
 - Import a JSON snapshot (replaces existing data after confirmation).
 - Load demo data (3 habits + 14 days of check-ins).
 - Clear all saved data.
+
+## Stack -> Print -> PDF
+1. Open `stack.html` and configure your plan (metadata + habits).
+2. Click **Abrir Print Tracker** to send data into `tracker.html`.
+3. In `tracker.html`, adjust days/priority/optional habits and click **Gerar preview**.
+4. Export a PDF via **Exportar PDF** (A4 landscape, gerado client-side).

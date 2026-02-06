@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Habit Stack</title>
+    <meta name="description" content="Habit Stack Designer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="logo">Habit</div>
+        <nav class="nav">
+          <a class="nav-link" href="/">Home</a>
+          <a class="nav-link" href="/stack.html">Stack</a>
+          <a class="nav-link" href="/tracker.html">Print</a>
+          <a class="nav-link" href="/digital.html">Digital</a>
+          <a class="nav-link" href="/legacy.html">Legacy</a>
+        </nav>
+      </header>
+
+      <main class="container">
+        <div class="page-title">
+          <p class="eyebrow">Stack Designer</p>
+          <h1>Stack</h1>
+          <p class="muted">
+            Crie sua sequência de hábitos com gatilhos, ações e recompensas.
+          </p>
+        </div>
+
+        <section class="card stack-section">
+          <h2>Informações do Plano</h2>
+          <form class="stack-form" id="metadataForm">
+            <label class="field">
+              Operador
+              <input
+                class="input"
+                id="metaOperador"
+                type="text"
+                maxlength="60"
+                placeholder="Seu nome"
+              />
+            </label>
+            <label class="field">
+              Período
+              <input
+                class="input"
+                id="metaPeriodo"
+                type="text"
+                maxlength="7"
+                inputmode="numeric"
+                pattern="\\d{2}/\\d{4}"
+                placeholder="MM/AAAA"
+              />
+            </label>
+            <label class="field">
+              Objetivo
+              <input
+                class="input"
+                id="metaObjetivo"
+                type="text"
+                maxlength="120"
+                placeholder="Seu objetivo"
+              />
+            </label>
+            <label class="field">
+              Frase
+              <textarea
+                class="textarea"
+                id="metaFrase"
+                rows="2"
+                placeholder="Sua frase motivacional"
+              ></textarea>
+            </label>
+          </form>
+        </section>
+
+        <section class="card stack-section">
+          <div class="stack-header">
+            <div>
+              <h2>Hábitos</h2>
+              <p class="muted">Edite, reordene e expanda os detalhes.</p>
+            </div>
+            <div class="stack-add">
+              <label class="sr-only" for="addCount">Quantidade de hábitos</label>
+              <input
+                class="input input-count"
+                id="addCount"
+                type="number"
+                min="1"
+                max="10"
+                value="1"
+                placeholder="1"
+              />
+              <button class="btn btn-primary" id="addBtn" type="button">
+                Adicionar
+              </button>
+            </div>
+          </div>
+          <div class="stack-list" id="habitList"></div>
+          <p class="muted" id="emptyState">
+            Nenhum hábito ainda. Comece adicionando o primeiro.
+          </p>
+        </section>
+
+        <section class="card stack-section">
+          <h2>Ações</h2>
+          <div class="stack-actions">
+            <button class="btn btn-secondary" id="demoBtn" data-action="demo" type="button">
+              Carregar demo
+            </button>
+            <button class="btn btn-secondary" id="importBtn" type="button">
+              Importar
+            </button>
+            <label class="sr-only" for="importFile">Importar arquivo JSON</label>
+            <input id="importFile" type="file" accept=".json" />
+            <button class="btn btn-secondary" id="exportBtn" type="button">
+              Exportar
+            </button>
+            <button class="btn btn-secondary" id="openTrackerBtn" type="button">
+              Abrir Print Tracker
+            </button>
+          </div>
+          <p
+            class="status-message"
+            id="stackStatus"
+            role="status"
+            aria-live="polite"
+          ></p>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <span>
+          Habit Stack - Por
+          <a href="https://igormmatos.com.br" rel="noopener">Igor Matos</a>
+        </span>
+        <span>© <span data-year></span></span>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/stack.js"></script>
+  </body>
+</html>
